@@ -1,0 +1,155 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String             @id @default(uuid())
+  username     String
+  email        String             @unique
+  passwordHash String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  projects     Project[]
+  gitConfigs   GitConfiguration[]
+}
+
+model Project {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  ownerId     String
+  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  workflows   Workflow[]
+  services    Service[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([ownerId])
+}
+
+model Workflow {
+  id            String            @id @default(uuid())
+  name          String
+  path          String
+  method        String            // GET, POST, PUT, DELETE, PATCH
+  nodes         Json              // Serialized state of React Flow nodes
+  edges         Json              // Serialized state of React Flow edges
+  isPublished   Boolean           @default(false)
+  projectId     String
+  project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  versions      WorkflowVersion[]
+  logs          ExecutionLog[]
+  analytics     Analytics[]
+  gatewayConfig GatewayConfig?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@unique([projectId, path, method])
+}
+
+model WorkflowVersion {
+  id            String   @id @default(uuid())
+  workflowId    String
+  workflow      Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  versionNumber Int
+  nodes         Json
+  edges         Json
+  changelog     String?
+  createdAt     DateTime @default(now())
+
+  @@index([workflowId])
+}
+
+model GitConfiguration {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       String   // GITHUB, GITLAB
+  accessToken    String   // Encrypted
+  refreshToken   String?  // Encrypted
+  repositoryName String
+  repositoryUrl  String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model GatewayConfig {
+  id              String   @id @default(uuid())
+  workflowId      String   @unique
+  workflow        Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  requireJwt      Boolean  @default(false)
+  jwtSecret       String?  // Encrypted
+  requireApiKey   Boolean  @default(false)
+  apiKeyValue     String?  // Encrypted
+  rateLimitLimit  Int?
+  rateLimitWindow Int?
+  corsEnabled     Boolean  @default(true)
+  allowedOrigins  String?
+  updatedAt       DateTime @updatedAt
+}
+
+model ExecutionLog {
+  id             String   @id @default(uuid())
+  workflowId     String
+  workflow       Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  method         String
+  path           String
+  responseStatus Int
+  latencyMs      Int
+  errorDetails   String?
+  requestPayload Json?
+  createdAt      DateTime @default(now())
+
+  @@index([workflowId, createdAt])
+}
+
+model Analytics {
+  id             String   @id @default(uuid())
+  workflowId     String
+  workflow       Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  date           DateTime @default(now())
+  totalRequests  Int      @default(0)
+  successCount   Int      @default(0)
+  errorCount     Int      @default(0)
+  avgLatencyMs   Float    @default(0)
+  p95LatencyMs   Float    @default(0)
+  peakHour       Int?     // 0-23
+  createdAt      DateTime @default(now())
+
+  @@index([workflowId, date])
+}
+
+model Service {
+  id          String         @id @default(uuid())
+  projectId   String
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  baseUrl     String
+  description String?
+  isActive    Boolean        @default(true)
+  routes      ServiceRoute[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([projectId])
+}
+
+model ServiceRoute {
+  id            String   @id @default(uuid())
+  serviceId     String
+  service       Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  path          String
+  method        String
+  targetService String
+  description   String?
+  createdAt     DateTime @default(now())
+
+  @@index([serviceId])
+}

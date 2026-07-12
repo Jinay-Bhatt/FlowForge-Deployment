@@ -1,0 +1,44 @@
+@baseUrl = http://localhost:5000
+
+### 1. Health Check
+GET {{baseUrl}}/api/health
+Accept: application/json
+
+###
+
+### 2. Public Statistics
+GET {{baseUrl}}/api/public-stats
+Accept: application/json
+
+###
+
+### 3. User Registration
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "SecurePassword123",
+  "name": "Test User"
+}
+
+###
+
+### 4. User Login
+# After logging in, copy the returned token and replace the value in the next request
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "SecurePassword123"
+}
+
+###
+
+### 5. Fetch Projects (Protected Route)
+# Replace <YOUR_JWT_TOKEN> with the token from the Login response
+GET {{baseUrl}}/api/projects
+Authorization: Bearer <YOUR_JWT_TOKEN>
+Accept: application/json
