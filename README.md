@@ -42,7 +42,10 @@ FlowForge solves this by providing a visual, drag-and-drop builder to design API
 `QuadSquad`
 
 ### Team Members:  
-- **Bhavya Durgani** (GitHub: https://github.com/BhavyaDurgani) 
+- **Bhavya Durgani** (GitHub: https://github.com/BhavyaDurgani)
+- **Jinay Bhatt** (GitHub: https://github.com/Jinay-Bhatt)
+- **Keyur Shah** (GitHub: https://github.com/KeyurShah356)
+- **Hitesh Chavda** (GitHub: https://github.com/hiteshjchavda18)
 
 ### Your Approach:
 - **Why we chose this**: We wanted to combine the visual developer experience of workflow builders with the absolute freedom of open-source. Code should belong to the creator, not the tool.
@@ -97,17 +100,17 @@ Provide a short note on how you used the partner technology:
 
 ## 📽️ Demo & Deliverables
 
-- **Demo Video Link (Mandatory):** [Paste link]  
-- **Deployment Link (Recommended):** [Paste link]  
-- **Pitch Deck / PPT (Optional):** [Paste link]  
+- **Demo Video Link (Mandatory):** https://drive.google.com/file/d/1PIKIjCpbW3R2nFLDsQarQCgiGg3HCaiu/view?usp=sharing 
+- **Deployment Link (Recommended):** https://flow-forge-deployment.vercel.app/  
+- **Pitch Deck / PPT (Optional):** https://docs.google.com/presentation/d/143rPXrPi-C3cKBe4jWKWZZX_tdy5-8_6/edit?usp=sharing&ouid=107062122404536139166&rtpof=true&sd=true
 
 ---
 
 ## ✅ Tasks & Bonus Checklist
 
-- [ ] All team members completed the mandatory social task  
-- [ ] Bonus Task 1 – Badge sharing  
-- [ ] Bonus Task 2 – Blog/article  
+- [✓] All team members completed the mandatory social task  
+- [✓] Bonus Task 1 – Badge sharing  
+- [✓] Bonus Task 2 – Blog/article  
 
 ---
 

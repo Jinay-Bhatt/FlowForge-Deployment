@@ -56,13 +56,13 @@ Always start with a triggerNode and end with a responseNode.`;
 
 export async function generateWorkflowFromPrompt(prompt: string): Promise<GeneratedWorkflow> {
   const provider = (process.env.AI_PROVIDER || "auto").toLowerCase();
-  
+
   let providersToTry: string[] = [];
-  
+
   if (provider === "auto") {
     // Priority Order: Groq -> Ollama
     const groqKey = process.env.GROQ_API_KEY;
-    
+
     if (groqKey && groqKey !== "your-groq-api-key-here" && groqKey.trim() !== "") {
       providersToTry.push("groq");
     }
@@ -131,12 +131,12 @@ async function queryAIProvider(provider: string, prompt: string): Promise<Genera
 
     const result = await response.json();
     responseText = result?.choices?.[0]?.message?.content;
-  } 
-  
+  }
+
   else if (provider === "ollama") {
     const ollamaUrl = process.env.OLLAMA_URL || "http://127.0.0.1:11434";
     const model = process.env.OLLAMA_MODEL || "llama3";
-    
+
     try {
       const response = await fetch(`${ollamaUrl}/api/chat`, {
         method: "POST",
@@ -166,8 +166,8 @@ async function queryAIProvider(provider: string, prompt: string): Promise<Genera
     } catch (e: any) {
       throw new Error(`Connection failed to local Ollama at ${ollamaUrl}. Ensure Ollama is running and model "${model}" is pulled ("ollama run ${model}"). Error: ${e.message}`);
     }
-  } 
-  
+  }
+
   else {
     throw new Error(`Unsupported AI provider: ${provider}`);
   }

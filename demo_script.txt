@@ -1,0 +1,235 @@
+================================================================================
+                     FLOWFORGE - HACKATHON DEMO VIDEO SCRIPT
+================================================================================
+Duration: 3 to 4 Minutes
+URL: https://flow-forge-deployment.vercel.app/
+================================================================================
+
+
+--------------------------------------------------------------------------------
+PART 1: INTRO (0:00 - 0:30)
+--------------------------------------------------------------------------------
+
+[You are on the landing page. Slowly scroll down through the page as you speak.]
+
+"Hey everyone! Today I want to show you FlowForge — a tool I built to solve one
+of the most annoying problems in software development.
+
+Think about this. Every time you want to build a simple online feature — like
+'get a list of users from the database' or 'process a payment' — a developer
+has to write hundreds of lines of setup code before even getting to the actual
+logic. Things like security checks, route definitions, database connection setup,
+and error handling. It's repetitive, boring, and takes hours.
+
+That's exactly what FlowForge fixes. With FlowForge, you can build all of that
+by simply dragging and dropping boxes on a screen — no typing code from scratch.
+And at the end, it spits out real, working code that you can deploy to any server
+you want. You own it completely.
+
+Let me show you how it works."
+
+
+--------------------------------------------------------------------------------
+PART 2: SIGN UP & FIRST PROJECT (0:30 - 0:55)
+--------------------------------------------------------------------------------
+
+[Click the "Get Started" or "Go to Dashboard" button in the top nav bar.]
+[If not logged in, click Register and fill in — Name: Demo User,
+ Email: demo@flowforge.dev, Password: Demo@1234 — then click Register.]
+[You land on the Dashboard. Show the empty projects screen.]
+
+"So I just signed up for FlowForge. This is my dashboard — it's clean and
+simple, nothing overwhelming.
+
+Let me create my first project. I'll click the big '+' button here."
+
+[Click '+ New Project'. A popup opens. Fill in:
+ - Project Name: Store Backend
+ - Description: My first API project]
+
+"I'll call it 'Store Backend' and hit Create."
+
+[Click Create. You land on the visual canvas builder page.]
+
+"And boom — we're inside the builder. This is where the magic happens."
+
+
+--------------------------------------------------------------------------------
+PART 3: BUILDING WITH AI (0:55 - 1:35)
+--------------------------------------------------------------------------------
+
+[The canvas is empty. Point to the left sidebar showing available node blocks.]
+[Click the yellow '✨ AI SYNTHESIZE' button in the top toolbar.]
+
+"Now here's something really cool. I don't even have to know which blocks to use.
+FlowForge has a built-in AI assistant. I just tell it what I want in plain English.
+
+So I'll click the 'AI Synthesize' button up here and describe what I need."
+
+[The AI Synthesize popup appears. Click inside the text box and type:
+ 'Create a workflow that fetches live currency exchange rates from an external
+  website and returns the result.']
+
+"I want to fetch live currency exchange rates and return them. Let me hit
+Synthesize and watch what happens."
+
+[Click '✨ Synthesize Workflow'. Watch the canvas animate — nodes appear and 
+ connect automatically with glowing blue arrows between them.]
+
+"In about two seconds, FlowForge built the entire logic for me. It created a 
+starting point — called the Trigger — which is like the front door of your API.
+Then it automatically added a step that goes and fetches the exchange rates from
+the internet. And finally, a Response step that sends the data back to whoever
+called it.
+
+All connected. All configured. Just from one sentence."
+
+
+--------------------------------------------------------------------------------
+PART 4: PUBLISHING & LIVE TESTING (1:35 - 2:10)
+--------------------------------------------------------------------------------
+
+[Click the white 'SAVE' button in the top toolbar. Then click 'INITIALIZE'.]
+[Watch it turn into a red 'SUSPEND' button with a green '● LIVE' dot.]
+
+"Now I'll save my work and then click Initialize to go live. See that green 
+LIVE badge? Our API is now actually running on the internet — live and accessible.
+
+Let me test it. I'll click this blue TEST button in the toolbar."
+
+[Click the '⚡ TEST API' button. The test panel slides open.]
+[In the Headers field, type: {"Content-Type": "application/json"}]
+[Click 'Execute Gateway Request'.]
+
+"I'll hit Execute and... there we go!"
+
+[Point to the green STATUS 200 badge, the amber LATENCY badge, and the JSON 
+ response showing real exchange rate data in the response panel.]
+
+"Status 200 — that means it worked perfectly. We can see the live exchange rate 
+data coming back from the internet, and FlowForge even tells us exactly how fast
+it responded — right there in milliseconds.
+
+This whole thing — building and testing a live API — took us under two minutes.
+No code written whatsoever."
+
+
+--------------------------------------------------------------------------------
+PART 5: GATEWAY SECURITY (2:10 - 2:25)
+--------------------------------------------------------------------------------
+
+[Click on the 'Gateway' option in the top navigation bar.]
+[Show the Gateway settings panel. Point to the Require JWT toggle and the 
+ Rate Limiting inputs. Do NOT toggle anything, just show it.]
+
+"Before we move on — FlowForge also handles security automatically. 
+
+On this Gateway page, I can flip a switch to require users to log in before
+calling my API. I can also set a limit — for example, allow only 100 requests 
+per minute — so nobody can spam or abuse our server. One click and it's done.
+No code needed."
+
+
+--------------------------------------------------------------------------------
+PART 6: SERVICE MESH GRAPH (2:25 - 2:50)
+--------------------------------------------------------------------------------
+
+[Click on 'Services' in the top navigation bar. The mesh graph page opens.]
+[Click '+ Register' on the left side. Fill in:
+ - Service Name: Inventory Service
+ - Target URL: http://inventory.internal
+ - Description: Manages product stock]
+[Click Register. A new node card appears on the graph.]
+
+"Now as your product grows, you will have multiple backend services talking to
+each other. It gets confusing. FlowForge helps you visualize all of that.
+
+I just registered a second service called 'Inventory Service'. Look — it shows 
+up as a node on this map. If I link my Store Backend to it, a visual line appears
+connecting them. At any point in time, I can look at this map and instantly 
+understand how all my services are connected. No more guessing."
+
+
+--------------------------------------------------------------------------------
+PART 7: LIVE MONITOR (2:50 - 3:05)
+--------------------------------------------------------------------------------
+
+[Click on 'Monitor' in the top navigation bar. The monitor page loads with the
+ live log feed, stat counters, and filter buttons.]
+
+"And this is the Live Monitor. Every time someone calls our API, a new entry 
+appears right here in real time — no page refresh needed. We can see whether
+the call succeeded or failed, how long it took, and which route was called.
+
+Those counters up top — total calls, average response time, error rate — they 
+update live as requests come in. It's like a control room for your API."
+
+
+--------------------------------------------------------------------------------
+PART 8: EXPORT YOUR CODE (3:05 - 3:35)
+--------------------------------------------------------------------------------
+
+[Click on 'Export' in the top navigation bar. The export page loads with the 
+ file tree on the left.]
+[Click on 'index.ts' in the file tree. The code appears in the preview panel 
+ on the right side.]
+[Point to the 'Download ZIP Codebase' button at the top of the page.]
+
+"And now the best part. Click Export.
+
+FlowForge takes everything you built visually and compiles it into real, working
+code. I can see the actual files right here — the server setup file, the database
+schema, Docker configuration, Swagger documentation. Real files, ready to deploy.
+
+I can click any file to read the code. And then I just hit 'Download ZIP' to get
+the entire project on my computer.
+
+Or — if I've connected my GitHub account in Settings — I can click 'Push to GitHub'
+and the code goes straight into my repository. Just like that.
+
+The key thing here is: this is YOUR code now. You can take it, modify it, and 
+deploy it to any server — Amazon, Google Cloud, your own machine. FlowForge 
+never holds your work hostage."
+
+
+--------------------------------------------------------------------------------
+PART 9: FUTURE SCOPE (3:35 - 3:55)
+--------------------------------------------------------------------------------
+
+[Stay on the Export page or go back to the builder canvas.]
+
+"Before I wrap up, I want to share where FlowForge is headed next.
+
+Right now, FlowForge generates code in TypeScript. But in the future, we plan to
+support other programming languages too — like Python, Go, and Java — so 
+developers on any stack can use FlowForge.
+
+We also plan to add ready-made workflow templates. Instead of starting from
+scratch, you'll be able to pick something like 'User Login System' or 
+'Payment Processing' and it will be pre-built for you in one click.
+
+We're also working on team collaboration features, so multiple developers can 
+build on the same canvas together — like Google Docs, but for backend code.
+
+And finally, we want to support deploying directly to cloud platforms like AWS
+and Google Cloud from within FlowForge itself — no terminal, no configuration
+files needed."
+
+
+--------------------------------------------------------------------------------
+PART 10: CLOSING (3:55 - 4:10)
+--------------------------------------------------------------------------------
+
+[Go back to the landing page — https://flow-forge-deployment.vercel.app/]
+[Slowly scroll through the hero section one more time as you close out.]
+
+"FlowForge is for every developer who has ever felt like writing backend code 
+takes too long before you can actually build what you want to build.
+
+It gives you the speed of a visual tool and the freedom of real code — together
+in one place.
+
+Thank you so much for watching! Check out FlowForge at the link below and let
+me know what you think. Happy building!"
+
+================================================================================

@@ -270,7 +270,12 @@ export async function gatewayRoutes(fastify: FastifyInstance) {
               );
             }
 
-            executionContext.steps[node.id] = runResult.data;
+            // Await the result if sandbox returned a Promise (async code using require/fetch)
+            const resolvedData = runResult.data && typeof runResult.data.then === "function"
+              ? await runResult.data
+              : runResult.data;
+
+            executionContext.steps[node.id] = resolvedData;
             continue;
           }
 

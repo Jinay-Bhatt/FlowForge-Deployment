@@ -150,7 +150,11 @@ async function executeScheduledWorkflow(workflow: any, triggerNodeId: string, fa
         if (!scriptCode) throw new Error(`Code node '${node.id}' missing JS code`);
         const runResult = runInSandbox(scriptCode, executionContext);
         if (!runResult.success) throw new Error(`Script Error in '${node.id}': ${runResult.error}`);
-        executionContext.steps[node.id] = runResult.data;
+        // Await the result if sandbox returned a Promise (async code using require/fetch)
+        const resolvedData = runResult.data && typeof runResult.data.then === "function"
+          ? await runResult.data
+          : runResult.data;
+        executionContext.steps[node.id] = resolvedData;
         continue;
       }
 
