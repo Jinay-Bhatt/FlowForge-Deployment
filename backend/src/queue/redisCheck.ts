@@ -9,6 +9,10 @@ export function checkRedisConnection(redisUrl: string): Promise<boolean> {
   return new Promise((resolve) => {
     try {
       const parsed = new URL(redisUrl);
+      if (parsed.protocol !== "redis:" && parsed.protocol !== "rediss:") {
+        resolve(false);
+        return;
+      }
       const host = parsed.hostname || "127.0.0.1";
       const port = parsed.port ? parseInt(parsed.port, 10) : 6379;
       

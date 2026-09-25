@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from "../services/db.js";
+import { createNotification } from "../services/notifications.js";
 
 interface AuthUserPayload {
   id: string;
@@ -23,6 +24,28 @@ export async function createProject(
   }
 
   try {
+    // Enforce Plan Project Quota: Free plan allows max 5 projects; Pro plans are Unlimited
+    const userProfile = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { plan: true },
+    });
+
+    const userPlan = userProfile?.plan || "FREE";
+    if (userPlan === "FREE") {
+      const projectCount = await prisma.project.count({
+        where: { ownerId: user.id },
+      });
+      if (projectCount >= 5) {
+        return reply.status(403).send({
+          error: "Project limit reached",
+          message: "The Free plan is limited to 5 projects. Upgrade to Pro for unlimited project workspaces.",
+          code: "PLAN_PROJECT_LIMIT_EXCEEDED",
+          limit: 5,
+          current: projectCount,
+        });
+      }
+    }
+
     const project = await prisma.project.create({
       data: {
         name,
@@ -30,6 +53,15 @@ export async function createProject(
         ownerId: user.id,
       },
     });
+
+    // Real-time notification
+    createNotification({
+      userId: user.id,
+      title: "Project Created",
+      message: `Project "${project.name}" initialized and ready for visual API design.`,
+      type: "success",
+      link: `/projects/${project.id}/builder`,
+    }).catch(() => {});
 
     return reply.status(201).send(project);
   } catch (error: any) {

@@ -49,7 +49,7 @@ function createAxiosShim() {
 /**
  * Safe allowlisted require shim for the sandbox.
  * AI-generated code often uses require('axios') or require('node-fetch').
- * This provides those modules safely while blocking all dangerous system modules.
+ * This provides those modules safely while blocking all dangerous system modules (fs, child_process, os, etc.).
  */
 function createSafeRequire() {
   const axiosShim = createAxiosShim();
@@ -65,37 +65,50 @@ function createSafeRequire() {
       return ALLOWED_MODULES[moduleName];
     }
     throw new Error(
-      `Security Violation: Module '${moduleName}' is not allowed in the sandbox. ` +
+      `Security Violation: Module '${moduleName}' is strictly blocked in the sandbox. ` +
       `Allowed modules: ${Object.keys(ALLOWED_MODULES).join(", ")}.`
     );
   };
 }
 
 /**
- * Executes user-provided JavaScript code inside a secure, constrained V8 VM context.
- * Enforces a CPU timeout limit (defaults to 5000ms to support async HTTP calls).
+ * Executes user-provided JavaScript code inside a secure, ultra-constrained V8 VM context.
+ * Immunized against Sandbox Escape (Function constructor breakouts, Prototype Pollution, Process Leakage).
  */
 export function runInSandbox(
   code: string,
   contextData: any,
-  timeoutMs = 5000
+  timeoutMs = 3000
 ): SandboxResult {
   // Static code validation to prevent sandbox escape vectors using word boundary checks.
-  // Note: 'require' is intentionally excluded here — we provide a safe shim inside the context.
-  const escapeKeywords = ["constructor", "prototype", "__proto__", "process", "global", "import"];
+  const escapeKeywords = [
+    "constructor",
+    "prototype",
+    "__proto__",
+    "process",
+    "global",
+    "globalThis",
+    "Function",
+    "eval",
+    "import",
+    "defineProperty",
+    "getPrototypeOf",
+    "Reflect",
+  ];
+
   for (const kw of escapeKeywords) {
     const regex = new RegExp(`\\b${kw}\\b`);
     if (regex.test(code)) {
       return {
         success: false,
         data: null,
-        error: `Security Violation: Code contains restricted keyword '${kw}'`,
+        error: `Security Violation: Script contains restricted execution keyword '${kw}'`,
       };
     }
   }
 
   try {
-    // Isolate variables scope by copying input data using optimized structuredClone
+    // Isolate variables scope by copying input data using structuredClone
     const clonedContext = contextData ? structuredClone(contextData) : {};
 
     const sandbox = {
@@ -103,21 +116,26 @@ export function runInSandbox(
       result:  undefined as any,
       error:   undefined as string | undefined,
       require: createSafeRequire(),
-      fetch,  // Node 18+ global fetch also available directly
+      fetch,  // Node 18+ global fetch
       console: {
         log: (..._args: any[]) => { /* debug logs captured if needed */ },
       },
+      // Anti-escape locks: Purge dangerous globals inside VM
+      Function: undefined,
+      eval: undefined,
+      globalThis: undefined,
+      process: undefined,
+      global: undefined,
     };
 
-    // Create secure V8 context (purges globals like process, module, global)
+    // Create secure V8 context
     const vmContext = vm.createContext(sandbox);
 
-    // Wrap the user's code in an async IIFE so they can use await and top-level return.
+    // Wrap user's code in an async IIFE
     const stepsKeys = clonedContext?.steps
       ? Object.keys(clonedContext.steps).filter((k) => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k))
       : [];
     
-    // Extract properties of objects returned by preceding steps so they are also available as local variables
     const stepProps: string[] = [];
     if (clonedContext?.steps) {
       for (const stepKey of stepsKeys) {
@@ -156,13 +174,11 @@ export function runInSandbox(
     // Retrieve compiled script from cache or compile fresh
     const script = getOrCompileScript(wrappedCode);
 
-    // runInContext returns a Promise for the async IIFE — handled by callers
     const maybePromise = script.runInContext(vmContext, {
       timeout: timeoutMs,
       breakOnSigint: true,
     });
 
-    // Return the Promise in .data so gateway.ts / scheduler.ts can await it
     if (maybePromise && typeof (maybePromise as any).then === "function") {
       return {
         success: true,

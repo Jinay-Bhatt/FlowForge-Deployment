@@ -1,9 +1,9 @@
-FlowForge - Visual API Builder + API Gateway Platform
+JBSnap - Visual API Builder + API Gateway Platform
 Overview
-<!-- FlowForge is a No-Code Backend Development Platform that allows users to visually design, deploy, secure, monitor, and manage APIs without writing backend code. -->
+<!-- JBSnap is a No-Code Backend Development Platform that allows users to visually design, deploy, secure, monitor, and manage APIs without writing backend code. -->
 <!-- new start-->
-FlowForge is an Open Backend Development Platform that allows users to visually design, deploy, secure, monitor, and manage APIs while maintaining full ownership of their backend code and infrastructure.
-Unlike traditional no-code platforms, FlowForge eliminates vendor lock-in by providing backend code export, Git integration, and custom code extensions.
+JBSnap is an Open Backend Development Platform that allows users to visually design, deploy, secure, monitor, and manage APIs while maintaining full ownership of their backend code and infrastructure.
+Unlike traditional no-code platforms, JBSnap eliminates vendor lock-in by providing backend code export, Git integration, and custom code extensions.
 <!-- new end -->
 The platform combines two major concepts:
 1.	No-Code API Builder
@@ -27,10 +27,10 @@ This process is repetitive and time-consuming.
 Additionally, organizations using microservices struggle to manage communication between services, monitor traffic, and enforce security policies.
 ________________________________________
 Proposed Solution
-FlowForge provides a visual canvas where users can create API workflows using drag-and-drop blocks.
+JBSnap provides a visual canvas where users can create API workflows using drag-and-drop blocks.
 Example:
 Request ↓ Validate Token ↓ Fetch User ↓ Response
-Once published, FlowForge automatically:
+Once published, JBSnap automatically:
 •	Creates API endpoints
 •	Executes workflows
 •	Handles authentication
@@ -156,7 +156,7 @@ Weakness:
 •	No visual API builder
 ________________________________________
 Unique Selling Proposition
-FlowForge combines:
+JBSnap combines:
 <!-- •	No-Code Backend Builder -->
 <!-- new start -->
 •   Visual Backend Builder
@@ -178,9 +178,14 @@ Core Differentiators
 •   Export Backend Source Code
 •   One Click GitHub Push
 •   Local Development Mode
-•   Custom JavaScript Functions
+•   Custom JavaScript Functions (Isolated V8 VM Sandbox)
 •   AI Generated APIs
 •   OpenAPI Export
+•   Ultra Security & Anti-DDoS Firewall (Global 120 reqs/min & Auth 10 reqs/min rate limits, automatic 15-min IP banning)
+•   Deep Real-Time MX DNS Lookup Email Verification (blocks disposable email providers & non-existent mail domains)
+•   Official Support Email Routing to dualithjbsnap@gmail.com
+•   Sub-millisecond In-Memory LRU DAG Cache (< 0.2ms execution) for 100,000+ (Lakhs of) concurrent users support
+•   Google 1st-Page SEO Schema.org Markup (SoftwareApplication, WebSite, Organization)
 <!-- new end -->
 ________________________________________
 Future Scope

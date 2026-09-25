@@ -1,6 +1,6 @@
-# 🧪 FlowForge — Complete Testing Guide
+# 🧪 JBSnap — Complete Testing Guide
 
-> **Scope**: End-to-end manual test coverage for every feature, page, API endpoint, WebSocket stream, and edge case in the FlowForge platform.
+> **Scope**: End-to-end manual test coverage for every feature, page, API endpoint, WebSocket stream, and edge case in the JBSnap platform.
 >
 > **Stack**: Next.js 14 Frontend (port 3000) · Fastify Backend (port 5000) · Neon PostgreSQL · BullMQ/Mock Queue · Socket.IO
 >
@@ -63,7 +63,7 @@ FRONTEND_URL=http://localhost:3000
 ```bash
 # Terminal 1 — Backend
 cd backend && npm run dev
-# Expected: "🚀 FlowForge API server ready at http://localhost:5000"
+# Expected: "🚀 JBSnap API server ready at http://localhost:5000"
 # Look for: "✅ Database connection established successfully"
 
 # Terminal 2 — Frontend
@@ -96,7 +96,7 @@ GET http://localhost:5000/api/health
 {
   "status": "ok",
   "timestamp": "2026-07-11T...",
-  "message": "FlowForge Backend Template is connected and running!"
+  "message": "JBSnap Backend Template is connected and running!"
 }
 ```
 - [ ] Status code: `200`
@@ -133,7 +133,7 @@ GET http://localhost:5000/api/public-stats
 
 #### 3.1.1 Happy Path
 - [ ] Navigate to `/register`
-- [ ] Enter a **new** email: `testuser@flowforge.dev`
+- [ ] Enter a **new** email: `testuser@jbsnap.dev`
 - [ ] Enter username: `TestUser`
 - [ ] Enter password: `SecurePass123!`
 - [ ] Click **Create Account**
@@ -176,7 +176,7 @@ Body: {}   ← empty
 - [ ] **Expected**: No redirect
 
 #### 3.2.3 Non-existent Email
-- [ ] Enter `nobody@flowforge.dev`
+- [ ] Enter `nobody@jbsnap.dev`
 - [ ] **Expected**: Error shown
 
 #### 3.2.4 Empty Fields
@@ -212,7 +212,7 @@ Authorization: Bearer <your-jwt-token>
 
 ### 4.1 Hero Section
 - [ ] Page loads without errors
-- [ ] FlowForge logo visible in the header/title tab (favicon)
+- [ ] JBSnap logo visible in the header/title tab (favicon)
 - [ ] **"Get Started Free"** CTA button → navigates to `/register`
 - [ ] **"Watch Demo"** CTA button → scrolls to demo section and auto-plays the animation
 - [ ] GitHub link in navbar → opens `https://github.com/Jinay-Bhatt/Backend-Api` in a new tab
@@ -282,7 +282,7 @@ Authorization: Bearer <token>
 Content-Type: application/json
 {
   "name": "My Test Project",
-  "description": "Testing FlowForge"
+  "description": "Testing JBSnap"
 }
 ```
 - [ ] **Expected**: `201` with `{ id, name, description, ownerId, ... }`
@@ -551,7 +551,7 @@ After all 6 nodes are connected, verify:
 >   ```bash
 >   curl -X POST http://localhost:5000/api/auth/login \
 >     -H "Content-Type: application/json" \
->     -d '{"email": "testuser@flowforge.dev", "password": "SecurePass123!"}'
+>     -d '{"email": "testuser@jbsnap.dev", "password": "SecurePass123!"}'
 >   ```
 >   Copy the `token` value from the response.
 
@@ -655,7 +655,7 @@ After all 6 nodes are connected, verify:
 |-------|-------|
 | `method` | `POST` |
 | `url` | `https://httpbin.org/post` |
-| `headers` | `{ "Content-Type": "application/json", "User-Agent": "FlowForge-Platform" }` |
+| `headers` | `{ "Content-Type": "application/json", "User-Agent": "JBSnap-Platform" }` |
 | `body` | `$request.body` |
 
 > **Variable interpolation**: `$request.body` passes the entire incoming request body to the external API. `$steps.nodeId.field` passes data from a previous step.
@@ -1207,7 +1207,7 @@ Body: {} ← empty
 
 ## 12. API Gateway Execution & Canvas Node Integration
 
-> This section covers step-by-step UI actions, node placement, configuration parameters, and exact API validations for every node type in the FlowForge visual engine.
+> This section covers step-by-step UI actions, node placement, configuration parameters, and exact API validations for every node type in the JBSnap visual engine.
 
 ---
 
@@ -1574,13 +1574,13 @@ Authorization: Bearer <token>
 > - **Export page** is where you run the compiler and choose to **Push to GitHub**. When you push from the Export page, it uses the configuration stored here in Settings. If you haven't linked a repository in Settings, clicking Push on the Export page will automatically redirect you here.
 
 #### 14.3.1 How to get your GitHub Personal Access Token (PAT)
-To securely connect FlowForge to your GitHub repository, you need to generate a Personal Access Token (Classic). Follow these steps:
+To securely connect JBSnap to your GitHub repository, you need to generate a Personal Access Token (Classic). Follow these steps:
 1. Log in to your account on [GitHub](https://github.com).
 2. Click your profile picture in the top-right corner → select **Settings**.
 3. In the left sidebar, scroll to the bottom and click **Developer settings**.
 4. Click **Personal access tokens** → select **Tokens (classic)**.
 5. Click the **Generate new token** dropdown → select **Generate new token (classic)**.
-6. **Note**: Give it a descriptive name (e.g. `FlowForge Exporter Dev`).
+6. **Note**: Give it a descriptive name (e.g. `JBSnap Exporter Dev`).
 7. **Expiration**: Select your preferred expiration (e.g. `30 days` or `No expiration` for dev).
 8. **Select Scopes**: Check the following permissions:
    - [x] **`repo`** (Full control of private and public repositories - *this is required so the backend can push your compiled branch/files*).
@@ -1911,7 +1911,7 @@ GET http://localhost:5000/api/<projectId>/<route>  ← 4th
 **URL**: `http://localhost:3000/docs`
 
 - [ ] Page loads without errors
-- [ ] FlowForge logo in tab title / header
+- [ ] JBSnap logo in tab title / header
 - [ ] Navigation sidebar present with section links
 - [ ] All documentation sections render properly (no blank content)
 - [ ] Code blocks render with syntax highlighting
@@ -1926,7 +1926,7 @@ GET http://localhost:5000/api/<projectId>/<route>  ← 4th
 **URL**: `http://localhost:3000/about`
 
 - [ ] Page loads without errors
-- [ ] FlowForge logo in page header
+- [ ] JBSnap logo in page header
 - [ ] Content renders properly
 
 ### 20.2 Changelog Page

@@ -1,4 +1,4 @@
-# System Design & Architecture Specification - FlowForge
+# System Design & Architecture Specification - JBSnap
 
 ## 1. High-Level System Architecture
 
@@ -10,7 +10,7 @@
                                    │ HTTPS / WebSockets
                                    ▼
                        ┌────────────────────────┐
-                       │    FlowForge Gateway   │
+                       │    JBSnap Gateway   │
                        │    (Fastify Engine)    │
                        └─────┬────────────┬─────┘
                              │            │
@@ -37,7 +37,7 @@ The system splits responsibilities into two distinct core tracks:
 
 ## 2. Gateway Pipeline & Route Registration
 
-To handle visually published APIs dynamically, the FlowForge Gateway registers a wildcard handler in Fastify:
+To handle visually published APIs dynamically, the JBSnap Gateway registers a wildcard handler in Fastify:
 
 ```
 Client Request ──► [Wildcard Match: /api/:projectId/*]

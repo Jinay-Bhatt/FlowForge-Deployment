@@ -11,7 +11,12 @@ import {
   Lock, 
   Key, 
   Send, 
-  Radio 
+  Radio,
+  Mail,
+  FileSpreadsheet,
+  FileText,
+  Cpu,
+  Bot
 } from 'lucide-react';
 
 // Mapper to translate emoji strings to Lucide components dynamically
@@ -29,33 +34,37 @@ export function getNodeIcon(iconName: string, size = 14, color?: string) {
     case '🗝️': return <Key size={size} style={style} />;
     case '📤': return <Send size={size} style={style} />;
     case '📡': return <Radio size={size} style={style} />;
+    case '📧': return <Mail size={size} style={style} />;
+    case '📊': return <FileSpreadsheet size={size} style={style} />;
+    case '📄': return <FileText size={size} style={style} />;
+    case '🤖': return <Cpu size={size} style={style} />;
     default: return null;
   }
 }
 
-// Custom helper to generate sci-fi handle styling
+// Custom helper to generate tactile neumorphic handle styling
 const getHandleStyle = (color: string, custom = {}) => ({
-  width: 10,
-  height: 10,
+  width: 12,
+  height: 12,
   borderRadius: '50%',
   border: `2px solid ${color}`,
-  background: '#020617',
-  boxShadow: `0 0 8px ${color}`,
+  background: '#121214',
+  boxShadow: `2px 2px 5px rgba(0, 0, 0, 0.85), -1px -1px 3px rgba(255, 255, 255, 0.08), 0 0 8px ${color}`,
   zIndex: 10,
   transition: 'all 0.2s',
   ...custom
 });
 
-// A mini-terminal simulation inside node blocks
+// A mini-terminal simulation inside node blocks (Sunken Neumorphic Well)
 function MiniConsole({ color, content }: { color: string; content: string }) {
   return (
     <div style={{
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 9,
-      background: 'rgba(2, 6, 23, 0.85)',
-      border: `1px solid ${color}30`,
-      boxShadow: `inset 0 0 8px ${color}10`,
-      borderRadius: 4,
+      background: '#070708',
+      border: '1px solid rgba(255, 255, 255, 0.05)',
+      boxShadow: 'inset 2px 2px 5px rgba(0, 0, 0, 0.9), inset -1px -1px 3px rgba(255, 255, 255, 0.04)',
+      borderRadius: 6,
       padding: '6px 8px',
       color: color,
       maxWidth: 192,
@@ -72,36 +81,39 @@ function MiniConsole({ color, content }: { color: string; content: string }) {
 
 function NodeShell({ color, icon, title, subtitle, children, selected }: any) {
   const borderColor = selected ? color : 'rgba(255, 255, 255, 0.08)';
-  const glowShadow = selected ? `0 0 16px ${color}20` : '0 4px 12px rgba(0,0,0,0.5)';
+  const shadow = selected
+    ? `0 0 0 2px ${color}, 10px 10px 24px rgba(0, 0, 0, 0.9), -6px -6px 16px rgba(255, 255, 255, 0.06), 0 0 24px ${color}30`
+    : `8px 8px 20px rgba(0, 0, 0, 0.88), -6px -6px 16px rgba(255, 255, 255, 0.05)`;
 
   return (
     <div style={{
       position: 'relative',
-      background: '#09090b',
+      background: 'linear-gradient(145deg, #161619, #0d0d0f)',
       border: `1px solid ${borderColor}`,
-      borderRadius: '10px',
+      borderRadius: '14px',
       minWidth: 220,
-      boxShadow: glowShadow,
+      boxShadow: shadow,
       overflow: 'hidden',
-      transition: 'all 0.2s ease',
+      transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
       fontFamily: "'JetBrains Mono', monospace",
     }}>
       {/* Header Bar */}
       <div style={{
-        background: `${color}0b`,
-        borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-        padding: '10px 14px',
+        background: `linear-gradient(180deg, ${color}14 0%, transparent 100%)`,
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+        padding: '11px 14px',
         display: 'flex',
         alignItems: 'center',
         gap: 10,
       }}>
-        {/* Tech Icon Container */}
+        {/* Tech Icon Container (Tactile embossed square) */}
         <div style={{
-          width: 26,
-          height: 26,
-          borderRadius: '6px',
-          background: `${color}12`,
-          border: `1px solid ${color}20`,
+          width: 28,
+          height: 28,
+          borderRadius: '8px',
+          background: '#121214',
+          border: `1px solid ${color}35`,
+          boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.8), -1px -1px 3px rgba(255, 255, 255, 0.07)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -134,6 +146,11 @@ function NodeShell({ color, icon, title, subtitle, children, selected }: any) {
           fontSize: 8,
           color: color,
           fontWeight: 700,
+          background: `${color}15`,
+          border: `1px solid ${color}30`,
+          borderRadius: '4px',
+          padding: '1px 5px',
+          boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.4)'
         }}>
           SYS
         </div>
@@ -146,8 +163,8 @@ function NodeShell({ color, icon, title, subtitle, children, selected }: any) {
           fontSize: 10,
           color: '#cbd5e1',
           lineHeight: 1.5,
-          background: '#030303',
-          borderTop: '1px solid rgba(255, 255, 255, 0.02)',
+          background: '#0a0a0c',
+          borderTop: '1px solid rgba(255, 255, 255, 0.03)',
         }}>
           {children}
         </div>
@@ -158,21 +175,22 @@ function NodeShell({ color, icon, title, subtitle, children, selected }: any) {
 
 function DataRow({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
       <span style={{ color: '#475569', minWidth: 50, fontSize: 9 }}>{label}</span>
       <span style={{
         fontFamily: "'JetBrains Mono', monospace",
         fontSize: 9,
-        background: '#040814',
-        border: '1px solid #14223c',
-        borderRadius: 3,
-        padding: '1px 6px',
+        background: '#060607',
+        border: '1px solid rgba(255, 255, 255, 0.05)',
+        boxShadow: 'inset 1px 1px 3px rgba(0, 0, 0, 0.85), inset -1px -1px 2px rgba(255, 255, 255, 0.04)',
+        borderRadius: 4,
+        padding: '2px 7px',
         color: '#e2e8f0',
         maxWidth: 130,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap'
-      }}>{value || '—'}</span>
+      }}>{value || '-'}</span>
     </div>
   );
 }
@@ -243,7 +261,7 @@ export function CustomCodeNode({ data, selected }: any) {
 export function IfElseNode({ data, selected }: any) {
   const color = '#a78bfa';
   return (
-    <NodeShell color={color} icon="🔀" title="If / Else" subtitle="Conditional branch" selected={selected}>
+    <NodeShell color={color} icon="𔀀" title="If / Else" subtitle="Conditional branch" selected={selected}>
       <Handle type="target" position={Position.Left} style={getHandleStyle(color)} className="handle-pulse" />
       <Handle id="true" type="source" position={Position.Right} style={getHandleStyle('#10b981', { top: '35%' })} className="handle-pulse" />
       <Handle id="false" type="source" position={Position.Right} style={getHandleStyle('#ef4444', { top: '65%' })} className="handle-pulse" />
@@ -261,7 +279,7 @@ export function SwitchCaseNode({ data, selected }: any) {
   const color = '#d946ef';
   const cases = data.cases || ['paid', 'pending', 'default'];
   return (
-    <NodeShell color={color} icon="🔀" title="Switch Case" subtitle="Multi-branch switch" selected={selected}>
+    <NodeShell color={color} icon="𔀀" title="Switch Case" subtitle="Multi-branch switch" selected={selected}>
       <Handle type="target" position={Position.Left} style={getHandleStyle(color)} className="handle-pulse" />
       
       {/* Map cases to handles */}
@@ -358,6 +376,58 @@ export function HttpClientNode({ data, selected }: any) {
   );
 }
 
+// ─── GMAIL NODE ────────────────────────────────────────────────────────────
+export function GmailNode({ data, selected }: any) {
+  const color = '#ea4335';
+  return (
+    <NodeShell color={color} icon="📧" title="Gmail API" subtitle="Send Email" selected={selected}>
+      <Handle type="target" position={Position.Left} style={getHandleStyle(color)} className="handle-pulse" />
+      <Handle type="source" position={Position.Right} style={getHandleStyle(color)} className="handle-pulse" />
+      <DataRow label="To" value={data.to || '$request.body.email'} />
+      <DataRow label="Subject" value={data.subject || 'Workflow Notification'} />
+    </NodeShell>
+  );
+}
+
+// ─── GOOGLE SHEETS NODE ────────────────────────────────────────────────────
+export function GoogleSheetsNode({ data, selected }: any) {
+  const color = '#0f9d58';
+  return (
+    <NodeShell color={color} icon="📊" title="Google Sheets" subtitle="Read / Append Rows" selected={selected}>
+      <Handle type="target" position={Position.Left} style={getHandleStyle(color)} className="handle-pulse" />
+      <Handle type="source" position={Position.Right} style={getHandleStyle(color)} className="handle-pulse" />
+      <DataRow label="Action" value={data.action || 'APPEND_ROW'} />
+      <DataRow label="Sheet ID" value={data.spreadsheetId || '1BxiMVs0XRA5...'} />
+    </NodeShell>
+  );
+}
+
+// ─── TXT FILE NODE ─────────────────────────────────────────────────────────
+export function TxtFileNode({ data, selected }: any) {
+  const color = '#06b6d4';
+  return (
+    <NodeShell color={color} icon="📄" title="TXT File" subtitle="Read / Write File" selected={selected}>
+      <Handle type="target" position={Position.Left} style={getHandleStyle(color)} className="handle-pulse" />
+      <Handle type="source" position={Position.Right} style={getHandleStyle(color)} className="handle-pulse" />
+      <DataRow label="Action" value={data.action || 'WRITE_FILE'} />
+      <DataRow label="Path" value={data.filePath || './logs/output.txt'} />
+    </NodeShell>
+  );
+}
+
+// ─── AI INTEGRATION NODE ───────────────────────────────────────────────────
+export function AiNode({ data, selected }: any) {
+  const color = '#8b5cf6';
+  return (
+    <NodeShell color={color} icon="🤖" title="AI Model" subtitle={`${data.provider || 'Groq'} Integration`} selected={selected}>
+      <Handle type="target" position={Position.Left} style={getHandleStyle(color)} className="handle-pulse" />
+      <Handle type="source" position={Position.Right} style={getHandleStyle(color)} className="handle-pulse" />
+      <DataRow label="Provider" value={(data.provider || 'Groq').toUpperCase()} />
+      <DataRow label="Model" value={data.model || 'llama-3.3-70b-versatile'} />
+    </NodeShell>
+  );
+}
+
 // ─── NODE TYPES MAP ────────────────────────────────────────────────────────
 export const nodeTypes = {
   triggerNode: TriggerNode,
@@ -372,6 +442,10 @@ export const nodeTypes = {
   jwtValidateNode: JwtValidateNode,
   apiKeyNode: ApiKeyNode,
   responseNode: ResponseNode,
+  gmailNode: GmailNode,
+  googleSheetsNode: GoogleSheetsNode,
+  txtFileNode: TxtFileNode,
+  aiNode: AiNode,
 };
 
 // ─── NODE PALETTE CONFIG ───────────────────────────────────────────────────
@@ -386,6 +460,22 @@ export const NODE_PALETTE = [
     ]
   },
   {
+    category: 'AI & Intelligence',
+    color: '#8b5cf6',
+    nodes: [
+      { type: 'aiNode', icon: '🤖', label: 'AI Integration', desc: 'Groq / Gemini / Claude / OpenAI API call', defaultData: { provider: 'groq', model: 'llama-3.3-70b-versatile', apiKey: '', systemPrompt: 'You are a helpful assistant.', prompt: '$request.body.prompt' } },
+    ]
+  },
+  {
+    category: 'Integrations',
+    color: '#14b8a6',
+    nodes: [
+      { type: 'httpClientNode', icon: '📡', label: 'HTTP Client', desc: 'Call external REST APIs', defaultData: { method: 'GET', url: 'https://api.github.com/users/$request.body.username', headers: '{\n  "User-Agent": "JBSnap-Platform"\n}', body: '' } },
+      { type: 'gmailNode', icon: '📧', label: 'Gmail API', desc: 'Send emails via Gmail', defaultData: { to: '$request.body.email', subject: 'Workflow Notification', body: 'Hello from JBSnap!', accessToken: '' } },
+      { type: 'googleSheetsNode', icon: '📊', label: 'Google Sheets', desc: 'Read or append rows in Sheets', defaultData: { action: 'APPEND_ROW', spreadsheetId: '', range: 'Sheet1!A1', rowData: '[$request.body.name, $request.body.email]', apiKey: '' } },
+    ]
+  },
+  {
     category: 'Logic',
     color: '#a78bfa',
     nodes: [
@@ -395,17 +485,11 @@ export const NODE_PALETTE = [
     ]
   },
   {
-    category: 'Data',
+    category: 'Data & Files',
     color: '#38bdf8',
     nodes: [
       { type: 'databaseNode', icon: '🗄️', label: 'Database', desc: 'PostgreSQL query', defaultData: { query: 'SELECT * FROM users WHERE id = $request.params.id;' } },
-    ]
-  },
-  {
-    category: 'Integrations',
-    color: '#14b8a6',
-    nodes: [
-      { type: 'httpClientNode', icon: '📡', label: 'HTTP Client', desc: 'Call external REST APIs', defaultData: { method: 'GET', url: 'https://api.github.com/users/$request.body.username', headers: '{\n  "User-Agent": "FlowForge-Platform"\n}', body: '' } },
+      { type: 'txtFileNode', icon: '📄', label: 'TXT File', desc: 'Read, write or append text files', defaultData: { action: 'WRITE_FILE', filePath: './data/output.txt', content: '$request.body.text' } },
     ]
   },
   {
@@ -431,4 +515,3 @@ export const NODE_PALETTE = [
     ]
   },
 ];
-

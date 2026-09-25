@@ -1,10 +1,10 @@
-# FlowForge Presentation & Onboarding Guide
+# JBSnap Presentation & Onboarding Guide
 
-This document is designed to help you onboard a teammate to the **FlowForge** codebase and explain the system's core concepts, starting from the basic foundations of backend engineering to our custom visual compiler architecture.
+This document is designed to help you onboard a teammate to the **JBSnap** codebase and explain the system's core concepts, starting from the basic foundations of backend engineering to our custom visual compiler architecture.
 
 ---
 
-## 0. Prerequisite Developer Onboarding: What is a Backend & Why FlowForge?
+## 0. Prerequisite Developer Onboarding: What is a Backend & Why JBSnap?
 
 When onboarding a new teammate, start with these conceptual foundations to align on the core mission of the project.
 
@@ -17,16 +17,16 @@ When onboarding a new teammate, start with these conceptual foundations to align
   4. Manually write business logic, error catchers, and validation middleware.
   5. Deploy this code, set up servers, and configure logging tools.
 
-### Concept B: The Pain Points of Traditional Coding (Why FlowForge?)
+### Concept B: The Pain Points of Traditional Coding (Why JBSnap?)
 * **Boilerplate Overload**: Setting up routing, CORS, DB connections, and JWT validation is repetitive and time-consuming.
 * **Syntax & Integration Errors**: A developer can spend hours debugging a misplaced bracket, type mismatch, or database connection timeout.
 * **Slow Feedback Loops**: Modifying an API route requires rewriting code, waiting for build systems, restarting servers, and testing via external clients (like Postman).
 * **Vendor Lock-in of Low-Code**: Visual tools like Make.com, Zapier, or Retool let you build fast but lock you into their hosting platforms. You cannot download your code, meaning you are stuck paying their monthly subscription fees forever.
 
-### Concept C: How FlowForge Changes the Game (The Paradigm Shift)
-FlowForge introduces a hybrid low-code approach that operates differently from normal coding:
+### Concept C: How JBSnap Changes the Game (The Paradigm Shift)
+JBSnap introduces a hybrid low-code approach that operates differently from normal coding:
 
-| Feature | Traditional Coding | FlowForge Visual Builder |
+| Feature | Traditional Coding | JBSnap Visual Builder |
 | :--- | :--- | :--- |
 | **Development Speed** | Slow; writing files, importing modules, config setups. | Fast; dragging nodes, selecting HTTP triggers, writing quick SQL lines. |
 | **Logic Construction** | Abstract text files (nested loops, file exports). | Visual DAG (Directed Acyclic Graph) showing data pathways step-by-step. |
@@ -42,8 +42,8 @@ FlowForge introduces a hybrid low-code approach that operates differently from n
 * Building a backend usually requires writing repetitive boilerplate code (routers, rate-limiters, DB connection pooling, validations).
 * Existing No-Code / Low-Code API builders are often "black boxes"—they lock your data in, make custom coding hard, and don't allow you to download or own your actual code.
 
-### The FlowForge Solution
-* **FlowForge** is a hybrid visual node-based API developer orchestrator. 
+### The JBSnap Solution
+* **JBSnap** is a hybrid visual node-based API developer orchestrator. 
 * It allows developers to build backend routing pipelines visually, test them in real-time on a hot gateway sandbox, inspect execution live over WebSockets, and then **export a 100% standalone, compiled production Node.js/Fastify server codebase** (via ZIP download or direct GitHub push).
 * It bridges the speed of visual builders with the flexibility and control of manual coding.
 
@@ -136,7 +136,7 @@ Use this script to demo the system to others:
 ### Step 1: Login & Dashboard Overview
 1. Open the console at `http://localhost:3000`.
 2. Enter the pre-seeded credentials:
-   * **Email**: `test@flowforge.com`
+   * **Email**: `test@jbsnap.com`
    * **Password**: `password123`
 3. Point out the dashboard design: *"Here we have the E-Commerce Core API Gateway project selected. Below, you can see our historical request charts rendered using custom SVG paths, and a list of our active published gateway endpoints."*
 

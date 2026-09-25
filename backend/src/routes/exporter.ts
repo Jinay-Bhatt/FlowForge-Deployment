@@ -6,6 +6,8 @@ import { authenticate } from "../middlewares/auth.js";
 import { prisma } from "../services/db.js";
 import { compileProject } from "../services/compiler.js";
 
+import { rateLimitExport } from "../middlewares/rateLimit.js";
+
 interface AuthUserPayload {
   id: string;
   email: string;
@@ -18,6 +20,7 @@ export async function exportRoutes(fastify: FastifyInstance) {
   // Submit project compilation job
   fastify.post(
     "/projects/:projectId/export",
+    { preHandler: [rateLimitExport] },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { projectId } = request.params as { projectId: string };
       const { pushToGit } = request.body as { pushToGit?: boolean };

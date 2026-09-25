@@ -1,6 +1,6 @@
-# FlowForge Backend Implementation Guide
+# JBSnap Backend Implementation Guide
 
-This guide provides a comprehensive, step-by-step roadmap to build the **FlowForge** backend server from scratch using Node.js, Fastify, TypeScript, Prisma, and BullMQ. 
+This guide provides a comprehensive, step-by-step roadmap to build the **JBSnap** backend server from scratch using Node.js, Fastify, TypeScript, Prisma, and BullMQ. 
 
 ---
 
@@ -52,7 +52,7 @@ backend/
    Add database URLs, JWT keys, and server configurations:
    ```env
    PORT=5000
-   DATABASE_URL="postgresql://postgres:password@localhost:5432/flowforge?schema=public"
+   DATABASE_URL="postgresql://postgres:password@localhost:5432/jbsnap?schema=public"
    REDIS_URL="redis://127.0.0.1:6379"
    JWT_SECRET="your-super-secret-jwt-key"
    ENCRYPTION_KEY="32-byte-hex-string-for-credentials"
@@ -207,7 +207,7 @@ backend/
        await prisma.$connect();
        const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
        await fastify.listen({ port, host: '0.0.0.0' });
-       console.log(`🚀 FlowForge server active on port ${port}`);
+       console.log(`🚀 JBSnap server active on port ${port}`);
      } catch (err) {
        fastify.log.error(err);
        process.exit(1);

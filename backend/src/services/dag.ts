@@ -70,6 +70,10 @@ export function resolveVariable(path: string, context: any): any {
     if (current === null || current === undefined) {
       return undefined;
     }
+    // Prototype pollution shield
+    if (part === '__proto__' || part === 'constructor' || part === 'prototype') {
+      return undefined;
+    }
     current = current[part];
   }
 

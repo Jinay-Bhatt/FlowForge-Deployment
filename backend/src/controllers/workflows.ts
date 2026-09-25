@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from "../services/db.js";
 import { invalidateWorkflowCache } from "../services/cache.js";
+import { createNotification } from "../services/notifications.js";
 
 interface AuthUserPayload {
   id: string;
@@ -312,6 +313,16 @@ export async function publishWorkflow(
     // Invalidate workflows cache for this project
     invalidateWorkflowCache(workflow.projectId);
 
+    createNotification({
+      userId: user.id,
+      title: isPublished ? "Workflow Published" : "Workflow Unpublished",
+      message: isPublished
+        ? `Endpoint ${workflow.method} ${workflow.path} is now live on the gateway.`
+        : `Endpoint ${workflow.method} ${workflow.path} has been unpublished.`,
+      type: isPublished ? "success" : "info",
+      link: `/projects/${workflow.projectId}/builder`,
+    }).catch(() => {});
+
     return reply.send({
       message: `Workflow ${
         isPublished ? "published" : "unpublished"
@@ -369,6 +380,14 @@ export async function createWorkflowVersion(
         changelog,
       },
     });
+
+    createNotification({
+      userId: user.id,
+      title: "Version Snapshot Created",
+      message: `Snapshot v${versionNumber} created for "${workflow.name}"${changelog ? `: ${changelog}` : "."}`,
+      type: "info",
+      link: `/projects/${workflow.projectId}/builder`,
+    }).catch(() => {});
 
     return reply.status(201).send(version);
   } catch (error: any) {

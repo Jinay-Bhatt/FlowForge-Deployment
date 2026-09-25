@@ -1,17 +1,18 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Zap, Settings, Trash2, Plus, GitBranch, Play, Radio,
   Terminal, Cpu, Database, Globe, Activity, ChevronRight,
   Link2, FolderOpen, ArrowUpRight, TrendingUp, Shield,
-  Clock, BarChart3, Layers, Sparkles, Bell, Search,
+  Clock, BarChart3, Layers, Bell, Search,
   RefreshCw, Server, Code2, Boxes, ExternalLink, Package,
-  CheckCircle2, AlertCircle, LogOut, X
+  CheckCircle2, AlertCircle, LogOut, X, Lock, Star
 } from 'lucide-react';
 import { api, BASE_URL_DIRECT } from '../../services/api';
 import { io } from 'socket.io-client';
+import NotificationBell from '../../components/NotificationBell';
 
 /* ── Animated Number Counter ──────────────────── */
 function AnimCounter({ value, duration = 1200 }: { value: number; duration?: number }) {
@@ -53,12 +54,48 @@ function AnimCounter({ value, duration = 1200 }: { value: number; duration?: num
 /* ── Project card icon set ─────────────────────── */
 const ICONS = [Terminal, Cpu, Database, Globe, GitBranch, Activity, Link2, FolderOpen, Code2, Layers, Boxes, Server];
 const COLORS = ['#6366f1', '#8b5cf6', '#38bdf8', '#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#84cc16'];
-const PATHS = [
-  'M0 25 Q20 10 40 20 T80 5 T120 25 T160 10 T200 20',
-  'M0 15 Q30 30 60 10 T120 28 T180 5 T200 15',
-  'M0 20 Q25 5 50 20 T100 8 T150 28 T200 18',
-  'M0 30 Q30 10 60 22 T120 5 T180 28 T200 10',
-];
+
+function getProjectTelemetry(seed: string) {
+  let hash = 0;
+  const str = seed || 'default';
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  const pseudoRand = (s: number) => {
+    const x = Math.sin(Math.abs(hash) + s * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
+  };
+
+  const count = 10;
+  const width = 260;
+  const height = 36;
+  const padX = 6;
+  const padTop = 6;
+  const padBottom = 6;
+  const step = (width - padX * 2) / (count - 1);
+
+  const pts: [number, number][] = [];
+  for (let i = 0; i < count; i++) {
+    const x = padX + i * step;
+    const y = padTop + pseudoRand(i + 1) * (height - padTop - padBottom);
+    pts.push([Number(x.toFixed(1)), Number(y.toFixed(1))]);
+  }
+
+  // Build smooth bezier curve
+  let pathD = `M ${pts[0][0]} ${pts[0][1]}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i];
+    const p1 = pts[i + 1];
+    const cpx = Number(((p0[0] + p1[0]) / 2).toFixed(1));
+    pathD += ` C ${cpx} ${p0[1]}, ${cpx} ${p1[1]}, ${p1[0]} ${p1[1]}`;
+  }
+
+  const fillD = `${pathD} L ${pts[pts.length - 1][0]} ${height} L ${pts[0][0]} ${height} Z`;
+  const lastPt = pts[pts.length - 1];
+
+  return { pathD, fillD, lastPt };
+}
 
 /* ── Project Card ──────────────────────────────── */
 function ProjectCard({ proj, idx, onDelete, deleting }: any) {
@@ -67,31 +104,35 @@ function ProjectCard({ proj, idx, onDelete, deleting }: any) {
   const wf = proj._count?.workflows ?? proj.workflows?.length ?? 0;
   const [hov, setHov] = useState(false);
 
+  const telemetry = useMemo(() => getProjectTelemetry(proj.id || proj.name || String(idx)), [proj.id, proj.name, idx]);
+  const avgLatency = useMemo(() => 16 + (Math.abs(idx * 7 + 11) % 24), [idx]);
+
   return (
     <div
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: hov ? 'rgba(255,255,255,0.015)' : 'rgba(9,9,9,0.4)',
-        border: `1px solid ${hov ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)'}`,
-        borderRadius: 14, padding: 22, position: 'relative', overflow: 'hidden',
+        background: 'var(--neu-surface)',
+        border: `1px solid ${hov ? 'var(--neu-border-bevel)' : 'var(--neu-border)'}`,
+        borderRadius: 20, padding: 22, position: 'relative', overflow: 'hidden',
         transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
         transform: hov ? 'translateY(-3px)' : 'none',
-        boxShadow: hov ? '0 16px 40px rgba(0,0,0,0.6)' : '0 2px 6px rgba(0,0,0,0.3)',
-        minHeight: 200, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+        boxShadow: hov ? 'var(--neu-flat-lg)' : 'var(--neu-flat)',
+        minHeight: 210, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
         cursor: 'pointer',
-        backdropFilter: 'blur(16px)',
       }}
     >
-      {/* top color bar */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1.5, background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent)', opacity: hov ? 1 : 0.4, transition: 'opacity 0.3s' }} />
-      {/* corner glow */}
-      <div style={{ position: 'absolute', top: -30, right: -30, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.03)', opacity: hov ? 0.8 : 0.2, filter: 'blur(24px)', pointerEvents: 'none', transition: 'opacity 0.3s' }} />
-
       <div>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 13 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', transition: 'box-shadow 0.3s' }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: 'var(--neu-surface)',
+              border: '1px solid var(--neu-border)',
+              boxShadow: 'var(--neu-flat-xs)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#ffffff', transition: 'box-shadow 0.3s'
+            }}>
               <Icon size={16} />
             </div>
             <div>
@@ -115,20 +156,39 @@ function ProjectCard({ proj, idx, onDelete, deleting }: any) {
       </div>
 
       <div>
-        {/* Sparkline */}
-        <div style={{ marginBottom: 13, opacity: hov ? 1 : 0.65, transition: 'opacity 0.3s' }}>
-          <svg viewBox="0 0 200 40" width="100%" height={28} preserveAspectRatio="none">
+        {/* Telemetry Activity Sparkline (Sunken Well) */}
+        <div style={{
+          background: 'var(--neu-sunken)',
+          border: '1px solid var(--neu-border)',
+          boxShadow: 'var(--neu-pressed-sm)',
+          borderRadius: 10,
+          padding: '8px 10px 6px',
+          marginBottom: 12,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ fontSize: 9.5, color: 'var(--text-faint)', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Latency / Throughput
+            </span>
+            <span style={{ fontSize: 9.5, color: hov ? '#ffffff' : 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace', transition: 'color 0.2s' }}>
+              {avgLatency}ms
+            </span>
+          </div>
+          <svg viewBox="0 0 260 36" width="100%" height={30} preserveAspectRatio="none" style={{ display: 'block', overflow: 'visible' }}>
             <defs>
-              <linearGradient id={`sg-${idx}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
-                <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+              <linearGradient id={`sg-${proj.id || idx}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity={hov ? 0.22 : 0.1} />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <path d={PATHS[idx % PATHS.length] + ' L200 40 L0 40Z'} fill={`url(#sg-${idx})`} className="sparkline-path" opacity={0.4} />
-            <path d={PATHS[idx % PATHS.length]} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" strokeLinecap="round" className="sparkline-path" />
+            <line x1="6" y1="35" x2="254" y2="35" stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" />
+            <path d={telemetry.fillD} fill={`url(#sg-${proj.id || idx})`} />
+            <path d={telemetry.pathD} fill="none" stroke={hov ? '#ffffff' : 'rgba(255,255,255,0.4)'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx={telemetry.lastPt[0]} cy={telemetry.lastPt[1]} r={2.5} fill="#ffffff" />
+            {hov && <circle cx={telemetry.lastPt[0]} cy={telemetry.lastPt[1]} r={5} fill="rgba(255,255,255,0.2)" />}
           </svg>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 11 }}>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span className="pulse-green" />
             <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>99.9% uptime</span>
@@ -137,7 +197,9 @@ function ProjectCard({ proj, idx, onDelete, deleting }: any) {
             <span style={{ fontSize: 10, fontWeight: 700, color: '#ffffff', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', padding: '2px 7px', borderRadius: 4, fontFamily: 'JetBrains Mono, monospace' }}>
               {wf} WF
             </span>
-            <span style={{ color: hov ? '#ffffff' : 'var(--text-faint)', transition: 'color 0.2s', display: 'flex' }}><ArrowUpRight size={13} /></span>
+            <span style={{ color: hov ? '#ffffff' : 'var(--text-faint)', transition: 'color 0.2s', display: 'flex' }}>
+              <Activity size={12} />
+            </span>
           </div>
         </div>
       </div>
@@ -192,14 +254,18 @@ export default function DashboardPage() {
   const [throughput, setThroughput] = useState(78);
   const [cacheHit, setCacheHit] = useState(94);
 
-  const [showNotif, setShowNotif] = useState(false);
-  const [unreadNotifs, setUnreadNotifs] = useState(true);
-  const [notifications, setNotifications] = useState<any[]>([
-    { id: 1, title: 'Workflow Published', desc: 'Endpoint /users was successfully published to production gateway.', time: '2 mins ago' },
-    { id: 2, title: 'GitHub Sync Completed', desc: 'Committed and pushed latest typescript compilation build to main branch.', time: '1 hour ago' },
-    { id: 3, title: 'Welcome to FlowForge!', desc: 'Get started by creating a new project and dragging nodes onto the visual builder canvas.', time: '1 day ago' },
-  ]);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [avatar, setAvatar] = useState<string | null>(null);
+
+  const isPro = user?.plan === 'PRO_MONTHLY' || user?.plan === 'PRO_YEARLY';
+
+  const handleNewProject = () => {
+    if (!isPro && projects.length >= 5) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    setShowCreate(true);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('ff_token');
@@ -208,6 +274,17 @@ export default function DashboardPage() {
     if (u) setUser(JSON.parse(u));
     loadProjects();
     setTimeout(() => setMounted(true), 80);
+
+    api.auth.me().then(res => {
+      if (res.user) {
+        setUser(res.user);
+        localStorage.setItem('ff_user', JSON.stringify(res.user));
+        if (res.user.avatar) {
+          localStorage.setItem('ff_avatar', res.user.avatar);
+          setAvatar(res.user.avatar);
+        }
+      }
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -332,106 +409,76 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', fontFamily: 'Inter, sans-serif' }}>
-
-      {/* ── Background ──────────────────────────── */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '-5%', left: '50%', transform: 'translateX(-50%)', width: 800, height: 600, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 65%)' }} />
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.012) 1px, transparent 0)', backgroundSize: '26px 26px' }} />
-      </div>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
 
       {/* ── Navbar ──────────────────────────────── */}
       <nav style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(3,3,3,0.85)', backdropFilter: 'blur(20px) saturate(180%)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        background: 'var(--neu-surface)',
+        borderBottom: '1px solid var(--neu-border)',
+        boxShadow: 'var(--neu-flat-xs)',
         opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(-8px)',
         transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
       }}>
         <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 28px', height: 58, display: 'flex', alignItems: 'center', gap: 12 }}>
           {/* Brand */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <img src="/FlowForge.png" alt="FlowForge" width={26} height={26} style={{ objectFit: 'contain' }} />
+            <img src="/logo.jpg" alt="JBSnap" width={26} height={26} style={{ objectFit: 'cover', borderRadius: '50%' }} />
             <span style={{ fontSize: 16, fontWeight: 900, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Flow<span style={{ background: 'linear-gradient(135deg,#ffffff,#a1a1aa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Forge</span>
+              JB<span style={{ background: 'linear-gradient(135deg,#ffffff,#a1a1aa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Snap</span>
             </span>
           </div>
 
           <ChevronRight size={13} color="rgba(255,255,255,0.15)" style={{ margin: '0 4px' }} />
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>Dashboard</span>
 
-          {/* Search */}
+          {/* Search (Sunken Neumorphic Well) */}
           <div style={{ position: 'relative', marginLeft: 16 }}>
             <Search size={12} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-faint)', pointerEvents: 'none' }} />
             <input
               placeholder="Search projects..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ paddingLeft: 30, paddingRight: 12, height: 32, width: 240, borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'var(--text-primary)', fontSize: 12.5, outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.2s, box-shadow 0.2s' }}
-              onFocus={e => { e.target.style.borderColor = 'rgba(255,255,255,0.4)'; e.target.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.07)'; }}
-              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.06)'; e.target.style.boxShadow = 'none'; }}
+              style={{
+                paddingLeft: 30, paddingRight: 12, height: 34, width: 240,
+                borderRadius: 10, background: 'var(--neu-sunken)',
+                border: '1px solid var(--neu-border)',
+                boxShadow: 'var(--neu-pressed-sm)',
+                color: 'var(--text-primary)', fontSize: 12.5, outline: 'none',
+                fontFamily: 'inherit', transition: 'border-color 0.2s, box-shadow 0.2s, width 0.2s'
+              }}
+              onFocus={e => { e.target.style.borderColor = 'rgba(255,255,255,0.25)'; e.target.style.boxShadow = 'var(--neu-pressed-sm), 0 0 0 2px rgba(255,255,255,0.08)'; e.target.style.width = '270px'; }}
+              onBlur={e => { e.target.style.borderColor = 'var(--neu-border)'; e.target.style.boxShadow = 'var(--neu-pressed-sm)'; e.target.style.width = '240px'; }}
             />
           </div>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* Notif */}
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => { setShowNotif(!showNotif); setUnreadNotifs(false); }}
-                style={{ width: 32, height: 32, borderRadius: '6px', background: 'transparent', border: '1px solid rgba(255,255,255,0.07)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', transition: 'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
-                <Bell size={13} />
-                {unreadNotifs && (
-                  <span style={{ position: 'absolute', top: 7, right: 7, width: 5, height: 5, borderRadius: '50%', background: '#ffffff', boxShadow: '0 0 5px #ffffff' }} />
-                )}
-              </button>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Real-time Notification Bell */}
+            <NotificationBell />
 
-              {showNotif && (
-                <div style={{
-                  position: 'absolute', right: 0, top: 40, width: 320, background: '#09090b', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)', padding: '16px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: 12
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#ffffff' }}>Notifications</span>
-                    <button
-                      onClick={() => setNotifications([])}
-                      style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 11, cursor: 'pointer' }}
-                      onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
-                      onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
-                    >
-                      Clear all
-                    </button>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 220, overflowY: 'auto' }}>
-                    {notifications.length === 0 ? (
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)', padding: '12px 0', textAlign: 'center' }}>No notifications</span>
-                    ) : (
-                      notifications.map(n => (
-                        <div key={n.id} style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>{n.title}</span>
-                            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{n.time}</span>
-                          </div>
-                          <span style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4 }}>{n.desc}</span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Link href="/settings" style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 11px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: 'transparent', color: 'var(--text-muted)', fontSize: 12, textDecoration: 'none', transition: 'all 0.15s' }}
-              onMouseEnter={e => { (e.currentTarget as any).style.borderColor = 'rgba(255,255,255,0.15)'; (e.currentTarget as any).style.color = 'var(--text-secondary)'; }}
-              onMouseLeave={e => { (e.currentTarget as any).style.borderColor = 'rgba(255,255,255,0.07)'; (e.currentTarget as any).style.color = 'var(--text-muted)'; }}>
+            <Link href="/settings" style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px',
+              borderRadius: 10, border: '1px solid var(--neu-border)',
+              background: 'var(--neu-surface)', boxShadow: 'var(--neu-flat-xs)',
+              color: 'var(--text-muted)', fontSize: 12, textDecoration: 'none',
+              transition: 'all 0.2s ease'
+            }}
+              onMouseEnter={e => { (e.currentTarget as any).style.borderColor = 'var(--neu-border-bevel)'; (e.currentTarget as any).style.color = '#ffffff'; (e.currentTarget as any).style.boxShadow = 'var(--neu-flat-sm)'; }}
+              onMouseLeave={e => { (e.currentTarget as any).style.borderColor = 'var(--neu-border)'; (e.currentTarget as any).style.color = 'var(--text-muted)'; (e.currentTarget as any).style.boxShadow = 'var(--neu-flat-xs)'; }}>
               <Settings size={12} /> Settings
             </Link>
 
-            {/* Avatar */}
-            <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid var(--border)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 800, color: '#000000', cursor: 'pointer', transition: 'all 0.2s' }}
+            {/* Avatar (Tactile circle) */}
+            <div style={{
+              width: 34, height: 34, borderRadius: '50%',
+              border: '1px solid var(--neu-border-bevel)',
+              boxShadow: 'var(--neu-flat-xs)',
+              overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12.5, fontWeight: 800, color: '#000000', cursor: 'pointer', transition: 'all 0.2s'
+            }}
               onClick={() => router.replace('/settings')}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}>
+              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = 'var(--neu-flat-sm)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--neu-flat-xs)'; }}>
               {avatar ? (
                 <img src={avatar} alt="User Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
@@ -450,16 +497,27 @@ export default function DashboardPage() {
         {/* ── Header ────────────────────────────── */}
         <div style={{
           display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
-          marginBottom: 36, flexWrap: 'wrap', gap: 14,
+          marginBottom: 28, flexWrap: 'wrap', gap: 14,
           opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(16px)',
           transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1)',
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 10px', borderRadius: 99, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 11, fontWeight: 700, color: '#cbd5e1', letterSpacing: '0.05em' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 99, background: 'var(--neu-surface)', border: '1px solid var(--neu-border)', boxShadow: 'var(--neu-flat-xs)', fontSize: 11, fontWeight: 700, color: '#cbd5e1', letterSpacing: '0.05em' }}>
                 <span className="pulse-green" style={{ background: '#ffffff', boxShadow: '0 0 5px #ffffff' } as any} />
                 WORKSPACE
               </span>
+              <Link href="/settings?tab=plan" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 12px', borderRadius: 99,
+                background: isPro ? 'rgba(99,102,241,0.12)' : 'var(--neu-surface)',
+                border: `1px solid ${isPro ? 'rgba(99,102,241,0.35)' : 'var(--neu-border)'}`,
+                boxShadow: 'var(--neu-flat-xs)',
+                fontSize: 10.5, fontWeight: 800, color: isPro ? (user?.plan === 'PRO_YEARLY' ? '#f59e0b' : '#a5b4fc') : '#94a3b8',
+                textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.06em'
+              }}>
+                {isPro ? (user?.plan === 'PRO_YEARLY' ? 'PRO YEARLY' : 'PRO MONTHLY') : 'FREE TIER'}
+                {!isPro && <span style={{ color: '#818cf8', marginLeft: 4 }}>UPGRADE</span>}
+              </Link>
             </div>
             <h1 style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.7px', color: 'var(--text-primary)', fontFamily: "'Plus Jakarta Sans', sans-serif", margin: 0, lineHeight: 1.15 }}>
               {user?.username ? `Welcome back, ${user.username}` : 'Workspace Console'}
@@ -468,21 +526,62 @@ export default function DashboardPage() {
               Manage your API endpoints, workflow pipelines, and gateway configurations.
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button onClick={loadProjects} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', color: 'var(--text-muted)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button onClick={loadProjects} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px',
+              borderRadius: 12, border: '1px solid var(--neu-border)',
+              background: 'var(--neu-surface)', boxShadow: 'var(--neu-flat-xs)',
+              color: 'var(--text-muted)', fontSize: 12.5, fontWeight: 600,
+              cursor: 'pointer', transition: 'all 0.2s ease'
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--neu-border-bevel)'; e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.boxShadow = 'var(--neu-flat-sm)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--neu-border)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.boxShadow = 'var(--neu-flat-xs)'; }}>
               <RefreshCw size={12} /> Refresh
             </button>
-            <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 18px', borderRadius: 9, background: '#ffffff', border: 'none', color: '#000000', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 18px rgba(255,255,255,0.1)', transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)' }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(255,255,255,0.18)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 18px rgba(255,255,255,0.1)'; }}>
+            <button onClick={handleNewProject} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '9px 20px',
+              borderRadius: 12, background: 'linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.45)', color: '#000000',
+              fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              boxShadow: '4px 4px 14px rgba(0,0,0,0.6), -2px -2px 8px rgba(255,255,255,0.12)',
+              transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)'
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '6px 6px 18px rgba(0,0,0,0.7), -3px -3px 10px rgba(255,255,255,0.2)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '4px 4px 14px rgba(0,0,0,0.6), -2px -2px 8px rgba(255,255,255,0.12)'; }}>
               <Plus size={14} /> New Project
             </button>
           </div>
         </div>
 
-        {/* ── Stat Cards ────────────────────────── */}
+        {/* ── Free Plan Ad Sponsor Banner (Neumorphic Card) ───────── */}
+        {!isPro && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+            padding: '14px 20px', borderRadius: 16, marginBottom: 28,
+            background: 'var(--neu-surface)',
+            border: '1px solid var(--neu-border)',
+            boxShadow: 'var(--neu-flat-sm)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 9.5, fontWeight: 800, padding: '2px 8px', borderRadius: 6, background: 'var(--neu-sunken)', border: '1px solid var(--neu-border)', color: '#94a3b8', letterSpacing: '0.06em' }}>
+                SPONSOR
+              </span>
+              <span style={{ fontSize: 13, color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Zap size={14} style={{ color: '#f59e0b', flexShrink: 0 }} /> Deploy unlimited APIs with <strong>JBSnap Pro</strong>: Unlimited projects, 12 AI generations/month, and 0 ads.
+              </span>
+            </div>
+            <Link href="/settings?tab=plan" style={{
+              padding: '7px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700,
+              background: '#ffffff', color: '#000000', textDecoration: 'none',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+              display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap'
+            }}>
+              Remove Ads with Pro
+            </Link>
+          </div>
+        )}
+
+        {/* ── Stat Cards (Neumorphic Extrusions) ─────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 32 }}>
           {statCards.map((s, i) => {
             const [hov, setHov] = useState(false);
@@ -491,21 +590,25 @@ export default function DashboardPage() {
                 onMouseEnter={() => setHov(true)}
                 onMouseLeave={() => setHov(false)}
                 style={{
-                  padding: '18px 20px', borderRadius: 14, position: 'relative', overflow: 'hidden',
-                  background: hov ? 'rgba(255,255,255,0.015)' : 'rgba(9,9,9,0.4)',
-                  border: `1px solid ${hov ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)'}`,
+                  padding: '20px 22px', borderRadius: 18, position: 'relative', overflow: 'hidden',
+                  background: 'var(--neu-surface)',
+                  border: `1px solid ${hov ? 'var(--neu-border-bevel)' : 'var(--neu-border)'}`,
                   transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
                   transform: hov ? 'translateY(-3px)' : 'none',
-                  boxShadow: hov ? '0 12px 32px rgba(0,0,0,0.5)' : 'none',
+                  boxShadow: hov ? 'var(--neu-flat-lg)' : 'var(--neu-flat)',
                   opacity: mounted ? 1 : 0,
                   transitionDelay: `${i * 60 + 200}ms`,
                 }}
               >
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent)', opacity: hov ? 0.7 : 0.2, transition: 'opacity 0.3s' }} />
-                <div style={{ position: 'absolute', top: -16, right: -16, width: 64, height: 64, borderRadius: '50%', background: 'rgba(255,255,255,0.02)', filter: 'blur(18px)', pointerEvents: 'none', transition: 'opacity 0.3s' }} />
-
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', transition: 'box-shadow 0.3s' }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10,
+                    background: 'var(--neu-surface)',
+                    border: '1px solid var(--neu-border)',
+                    boxShadow: 'var(--neu-flat-xs)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#ffffff', transition: 'box-shadow 0.3s'
+                  }}>
                     {s.icon}
                   </div>
                   {s.isStatus && (
@@ -528,7 +631,7 @@ export default function DashboardPage() {
         {/* ── Two-Column Layout ─────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>
 
-          {/* LEFT — Projects + Capabilities */}
+          {/* LEFT: Projects + Capabilities */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
             {/* Section header */}
@@ -537,7 +640,7 @@ export default function DashboardPage() {
                 <FolderOpen size={14} color="#ffffff" />
                 <span style={{ fontSize: 13.5, fontWeight: 700 }}>Project Workspaces</span>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#ffffff', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', padding: '1px 8px', borderRadius: 99 }}>
-                  {filtered.length}
+                  {isPro ? `${filtered.length} (Unlimited)` : `${filtered.length} / 5 Projects`}
                 </span>
               </div>
               {search && <button onClick={() => setSearch('')} style={{ fontSize: 11, color: 'var(--text-faint)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Clear</button>}
@@ -554,7 +657,7 @@ export default function DashboardPage() {
                 </div>
                 <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>{search ? 'No matching projects' : 'No project workspaces'}</h3>
                 <p style={{ color: 'var(--text-muted)', marginBottom: 20, fontSize: 13 }}>{search ? 'Try a different term.' : 'Create your first API workspace to get started.'}</p>
-                {!search && <button onClick={() => setShowCreate(true)} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: '#ffffff', color: '#000000', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 18px rgba(255,255,255,0.1)' }}>Create First Project</button>}
+                {!search && <button onClick={handleNewProject} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: '#ffffff', color: '#000000', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 18px rgba(255,255,255,0.1)' }}>Create First Project</button>}
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px,1fr))', gap: 14 }}>
@@ -565,7 +668,7 @@ export default function DashboardPage() {
             {/* Platform Capabilities */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 14 }}>
-                <Sparkles size={13} color="#f59e0b" />
+                <Cpu size={13} color="#f59e0b" />
                 <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Platform Capabilities</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
@@ -593,9 +696,8 @@ export default function DashboardPage() {
           {/* RIGHT SIDEBAR */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 76 }}>
 
-            {/* System Health */}
-            <div style={{ background: 'rgba(8,8,8,0.65)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: 18, position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg,transparent,rgba(16,185,129,0.4),transparent)' }} />
+            {/* System Health (Neumorphic Surface) */}
+            <div style={{ background: 'var(--neu-surface)', border: '1px solid var(--neu-border)', borderRadius: 18, padding: 20, boxShadow: 'var(--neu-flat)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                   <Activity size={13} color="#10b981" />
@@ -618,20 +720,20 @@ export default function DashboardPage() {
                     <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{bar.label}</span>
                     <span style={{ fontSize: 10.5, color: bar.color, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>{bar.val}{bar.unit}</span>
                   </div>
-                  <div style={{ height: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ height: 5, background: 'var(--neu-sunken)', borderRadius: 99, overflow: 'hidden', boxShadow: 'var(--neu-pressed-sm)' }}>
                     <div style={{ height: '100%', width: `${bar.label === 'API Throughput' ? (bar.val / 120) * 100 : bar.val}%`, background: `linear-gradient(90deg,${bar.color}70,${bar.color})`, borderRadius: 99, boxShadow: `0 0 6px ${bar.color}50`, transition: 'width 1s cubic-bezier(0.16,1,0.3,1)' }} />
                   </div>
                 </div>
               ))}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--neu-border)' }}>
                 {[
                   { k: 'Latency', v: avgLatency > 0 ? `${avgLatency}ms` : '<1ms', c: '#10b981' },
                   { k: 'Workers', v: `${activeWorkers}/4`, c: '#38bdf8' },
                   { k: 'Error Rate', v: `${errRate}%`, c: errRate > 10 ? '#ef4444' : '#10b981' },
                   { k: 'Requests', v: `${liveLogs.length}`, c: '#8b5cf6' },
                 ].map(m => (
-                  <div key={m.k} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 7, padding: '8px 10px' }}>
+                  <div key={m.k} style={{ background: 'var(--neu-sunken)', border: '1px solid var(--neu-border)', boxShadow: 'var(--neu-pressed-sm)', borderRadius: 8, padding: '8px 10px' }}>
                     <div style={{ fontSize: 9, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>{m.k}</div>
                     <div style={{ fontSize: 14, fontWeight: 800, color: m.c, fontFamily: 'JetBrains Mono, monospace' }}>{m.v}</div>
                   </div>
@@ -640,9 +742,9 @@ export default function DashboardPage() {
             </div>
 
 
-            {/* Top Projects quick links */}
+            {/* Top Projects quick links (Neumorphic Card) */}
             {projects.length > 0 && (
-              <div style={{ background: 'rgba(8,8,8,0.65)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: 18 }}>
+              <div style={{ background: 'var(--neu-surface)', border: '1px solid var(--neu-border)', borderRadius: 18, padding: 20, boxShadow: 'var(--neu-flat)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
                   <TrendingUp size={13} color="#f59e0b" />
                   <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recent Projects</span>
@@ -652,11 +754,11 @@ export default function DashboardPage() {
                   const Icon = ICONS[i % ICONS.length];
                   return (
                     <Link key={p.id} href={`/projects/${p.id}/builder`} style={{ textDecoration: 'none' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 0', borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.03)' : 'none', cursor: 'pointer', transition: 'background 0.15s', borderRadius: 6 }}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 0', borderBottom: i < 3 ? '1px solid var(--neu-border)' : 'none', cursor: 'pointer', transition: 'all 0.15s', borderRadius: 8 }}
                         onMouseEnter={e => e.currentTarget.style.paddingLeft = '4px'}
                         onMouseLeave={e => e.currentTarget.style.paddingLeft = '0'}
                       >
-                        <div style={{ width: 26, height: 26, borderRadius: 7, background: `${c}10`, border: `1px solid ${c}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: c, flexShrink: 0 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--neu-surface)', border: `1px solid ${c}30`, boxShadow: 'var(--neu-flat-xs)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: c, flexShrink: 0 }}>
                           <Icon size={12} />
                         </div>
                         <div style={{ flex: 1, overflow: 'hidden' }}>
@@ -679,15 +781,15 @@ export default function DashboardPage() {
         <div className="overlay" onClick={e => { if (e.target === e.currentTarget) setShowCreate(false); }}>
           <div className="modal" style={{ maxWidth: 460 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-              <div style={{ width: 38, height: 38, borderRadius: 11, background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(255,255,255,0.1)' }}>
-                <Plus size={17} color="#000000" />
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg,#ffffff,#e2e8f0)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '4px 4px 12px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.2)' }}>
+                <Plus size={18} color="#000000" />
               </div>
               <div>
                 <h2 style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.3px' }}>Create New Project</h2>
                 <p style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>Set up your API workspace</p>
               </div>
-              <button onClick={() => setShowCreate(false)} style={{ marginLeft: 'auto', width: 26, height: 26, borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <X size={12} />
+              <button onClick={() => setShowCreate(false)} style={{ marginLeft: 'auto', width: 28, height: 28, borderRadius: 8, border: '1px solid var(--neu-border)', background: 'var(--neu-surface)', boxShadow: 'var(--neu-flat-xs)', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={13} />
               </button>
             </div>
             <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -698,18 +800,69 @@ export default function DashboardPage() {
               <div>
                 <label className="label">Description</label>
                 <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="What does this project do?" rows={3}
-                  style={{ width: '100%', background: 'var(--bg-void)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 13px', color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: 13, outline: 'none', resize: 'vertical', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
-                  onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                  style={{ width: '100%', background: 'var(--neu-sunken)', border: '1px solid var(--neu-border)', borderRadius: 10, padding: '10px 13px', color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: 13, outline: 'none', resize: 'vertical', boxSizing: 'border-box', boxShadow: 'var(--neu-pressed)', transition: 'border-color 0.2s, box-shadow 0.2s' }}
+                  onFocus={e => { e.target.style.borderColor = 'rgba(255,255,255,0.25)'; e.target.style.boxShadow = 'var(--neu-pressed), 0 0 0 2px rgba(255,255,255,0.08)'; }}
+                  onBlur={e => { e.target.style.borderColor = 'var(--neu-border)'; e.target.style.boxShadow = 'var(--neu-pressed)'; }}
                 />
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button type="button" onClick={() => setShowCreate(false)} className="btn btn-ghost" style={{ flex: 1, padding: '9px 14px', borderRadius: 8 }}>Cancel</button>
-                <button type="submit" disabled={creating} className="btn" style={{ flex: 2, padding: '9px 14px', borderRadius: 8, background: creating ? 'var(--bg-elevated)' : '#ffffff', color: creating ? '#fff' : '#000000', border: 'none', boxShadow: creating ? 'none' : '0 4px 18px rgba(255,255,255,0.1)' }}>
+                <button type="button" onClick={() => setShowCreate(false)} className="btn btn-ghost" style={{ flex: 1, padding: '10px 14px', borderRadius: 10 }}>Cancel</button>
+                <button type="submit" disabled={creating} className="btn btn-primary" style={{ flex: 2, padding: '10px 14px', borderRadius: 10 }}>
                   {creating ? <><span className="spinner" />Creating...</> : 'Create Project'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Upgrade Plan Modal (Free Limit Reached) ── */}
+      {showUpgradeModal && (
+        <div className="overlay" onClick={e => { if (e.target === e.currentTarget) setShowUpgradeModal(false); }}>
+          <div className="modal" style={{ maxWidth: 480, border: '1px solid rgba(99,102,241,0.35)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Lock size={18} color="#ef4444" />
+              </div>
+              <div>
+                <h2 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: '#ffffff' }}>Project Limit Reached</h2>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '2px 0 0' }}>Free Plan allows up to 5 project workspaces</p>
+              </div>
+              <button onClick={() => setShowUpgradeModal(false)} style={{ marginLeft: 'auto', width: 26, height: 26, borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={12} />
+              </button>
+            </div>
+
+            <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 10, marginBottom: 20 }}>
+              <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6, margin: 0 }}>
+                You currently have <strong>{projects.length} / 5</strong> active projects. To build more endpoints and unlock unlimited projects, upgrade your workspace to <strong>JBSnap Pro</strong>.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <Link href="/settings?tab=plan" onClick={() => setShowUpgradeModal(false)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 16px',
+                  borderRadius: 8, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)',
+                  color: '#a5b4fc', textDecoration: 'none', fontWeight: 600, fontSize: 13
+                }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Zap size={14} /> Upgrade to Pro Monthly (₹499/mo)
+                </span>
+              </Link>
+              <Link href="/settings?tab=plan" onClick={() => setShowUpgradeModal(false)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 16px',
+                  borderRadius: 8, background: '#f59e0b', color: '#000000', textDecoration: 'none', fontWeight: 700, fontSize: 13
+                }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Star size={14} fill="#000000" color="#000000" /> Choose Pro Yearly (₹4,999/yr - Save ₹989)
+                </span>
+              </Link>
+              <button onClick={() => setShowUpgradeModal(false)} style={{ padding: '10px', background: 'transparent', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer' }}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -2,12 +2,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Mail, Lock } from 'lucide-react';
+import { User, Mail, Lock, Users } from 'lucide-react';
 import { api } from '../../services/api';
+import GoogleSignInButton from '../../components/GoogleSignInButton';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [form, setForm] = useState({ username: '', email: '', password: '', gender: 'Prefer not to say' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -16,6 +17,7 @@ export default function RegisterPage() {
   const [usernameFocused, setUsernameFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [genderFocused, setGenderFocused] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -42,10 +44,16 @@ export default function RegisterPage() {
     }
   };
 
+  const handleGoogleSuccess = (res: any) => {
+    localStorage.setItem('ff_token', res.token);
+    localStorage.setItem('ff_user', JSON.stringify(res.user));
+    router.replace('/dashboard');
+  };
+
   return (
     <main style={{
       minHeight: '100vh',
-      background: '#020203',
+      background: 'var(--neu-base)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -53,25 +61,12 @@ export default function RegisterPage() {
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Premium colorful background glow mesh */}
+      {/* Subtle ambient lighting */}
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 1 }}>
         <div style={{
-          position: 'absolute', top: '25%', left: '50%', transform: 'translate(-50%, -50%)',
-          width: 550, height: 550, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.04) 50%, transparent 70%)',
-          filter: 'blur(64px)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '-10%', right: '10%',
-          width: 450, height: 450, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(6, 182, 212, 0.06) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-        }} />
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.015) 1px, transparent 0)',
-          backgroundSize: '24px 24px',
-          opacity: 0.8
+          position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+          width: 800, height: 320,
+          background: 'radial-gradient(ellipse at top, rgba(255, 255, 255, 0.04), transparent 70%)',
         }} />
       </div>
 
@@ -90,24 +85,26 @@ export default function RegisterPage() {
         <div style={{ textAlign: 'center', marginBottom: 32, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           {/* Logo Node with high-tech background glow */}
           <div style={{
-            position: 'relative', width: 68, height: 68, borderRadius: 20,
-            background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)',
+            position: 'relative', width: 72, height: 72, borderRadius: 22,
+            background: 'var(--neu-surface)',
+            border: '1px solid var(--neu-border)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)'
+            marginBottom: 20,
+            boxShadow: 'var(--neu-flat-sm)',
           }}>
-            <img src="/FlowForge.png" alt="FlowForge Logo" width="34" height="34" style={{ objectFit: 'contain' }} />
+            <img src="/logo.jpg" alt="JBSnap Logo" width="40" height="40" style={{ objectFit: 'cover', borderRadius: '50%' }} />
             <div style={{
-              position: 'absolute', inset: -4, borderRadius: 24,
-              border: '1.5px dashed rgba(255,255,255,0.04)', pointerEvents: 'none'
+              position: 'absolute', inset: -4, borderRadius: 26,
+              border: '1.5px dashed rgba(255,255,255,0.06)', pointerEvents: 'none'
             }} />
           </div>
           <h1 style={{
             fontSize: 28, fontWeight: 900, color: '#ffffff', letterSpacing: '-1px',
             fontFamily: "'Plus Jakarta Sans', Inter, sans-serif", lineHeight: 1.1
           }}>
-            Flow<span style={{ background: 'linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Forge</span>
+            JB<span style={{ background: 'linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Snap</span>
           </h1>
-          <p style={{ fontSize: 13.5, color: '#64748b', marginTop: 8 }}>Create your FlowForge account</p>
+          <p style={{ fontSize: 13.5, color: '#94a3b8', marginTop: 8 }}>Create your JBSnap account</p>
         </div>
 
         {error && (
@@ -121,36 +118,29 @@ export default function RegisterPage() {
             color: '#fca5a5',
             fontSize: 12.5,
             textAlign: 'center',
-            boxShadow: '0 4px 12px rgba(239,68,68,0.05)'
+            boxShadow: 'var(--neu-pressed-sm)'
           }}>
             {error}
           </div>
         )}
 
-        {/* Main Glassmorphic Card */}
+        {/* Main Card */}
         <form onSubmit={handleSubmit} style={{ width: '100%' }}>
           <div style={{
             width: '100%',
             padding: '36px 32px',
-            background: 'rgba(8, 8, 11, 0.45)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
+            background: 'var(--neu-surface)',
+            border: '1px solid var(--neu-border-bevel)',
             borderRadius: 24,
             display: 'flex',
             flexDirection: 'column',
-            gap: 24,
-            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.03)',
+            gap: 20,
+            boxShadow: 'var(--neu-flat-lg)',
             position: 'relative',
             overflow: 'hidden'
           }}>
-            {/* Top Glowing Edge decoration */}
-            <div style={{
-              position: 'absolute', top: 0, left: 0, right: 0, height: 1.5,
-              background: 'linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.4), transparent)'
-            }} />
-
             {/* Username Field */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <label style={{
                 fontSize: 11, fontWeight: 700, color: '#94a3b8',
                 textTransform: 'uppercase', letterSpacing: '0.08em'
@@ -158,8 +148,9 @@ export default function RegisterPage() {
               <div style={{ position: 'relative' }}>
                 <span style={{
                   position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
-                  color: usernameFocused ? '#818cf8' : '#475569', display: 'flex', alignItems: 'center',
-                  transition: 'color 0.25s ease'
+                  color: usernameFocused ? '#ffffff' : '#475569', display: 'flex', alignItems: 'center',
+                  transition: 'color 0.25s ease',
+                  zIndex: 2,
                 }}>
                   <User size={16} />
                 </span>
@@ -172,16 +163,16 @@ export default function RegisterPage() {
                   placeholder="johndoe"
                   style={{
                     width: '100%',
-                    background: '#040406',
-                    border: `1px solid ${usernameFocused ? 'rgba(99, 102, 241, 0.35)' : 'rgba(255, 255, 255, 0.08)'}`,
+                    background: 'var(--neu-sunken)',
+                    border: `1px solid ${usernameFocused ? 'rgba(255, 255, 255, 0.35)' : 'var(--neu-border)'}`,
                     borderRadius: 12,
                     padding: '12px 16px 12px 46px',
                     color: '#ffffff',
                     fontFamily: 'inherit',
                     fontSize: 14,
                     outline: 'none',
-                    height: 48,
-                    boxShadow: usernameFocused ? '0 0 0 3px rgba(99, 102, 241, 0.12)' : 'none',
+                    height: 46,
+                    boxShadow: usernameFocused ? 'var(--neu-pressed-sm), 0 0 0 3px rgba(255, 255, 255, 0.08)' : 'var(--neu-pressed-sm)',
                     transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                     boxSizing: 'border-box'
                   }}
@@ -190,7 +181,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Email Field */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <label style={{
                 fontSize: 11, fontWeight: 700, color: '#94a3b8',
                 textTransform: 'uppercase', letterSpacing: '0.08em'
@@ -198,8 +189,9 @@ export default function RegisterPage() {
               <div style={{ position: 'relative' }}>
                 <span style={{
                   position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
-                  color: emailFocused ? '#818cf8' : '#475569', display: 'flex', alignItems: 'center',
-                  transition: 'color 0.25s ease'
+                  color: emailFocused ? '#ffffff' : '#475569', display: 'flex', alignItems: 'center',
+                  transition: 'color 0.25s ease',
+                  zIndex: 2,
                 }}>
                   <Mail size={16} />
                 </span>
@@ -212,16 +204,16 @@ export default function RegisterPage() {
                   placeholder="you@company.com"
                   style={{
                     width: '100%',
-                    background: '#040406',
-                    border: `1px solid ${emailFocused ? 'rgba(99, 102, 241, 0.35)' : 'rgba(255, 255, 255, 0.08)'}`,
+                    background: 'var(--neu-sunken)',
+                    border: `1px solid ${emailFocused ? 'rgba(255, 255, 255, 0.35)' : 'var(--neu-border)'}`,
                     borderRadius: 12,
                     padding: '12px 16px 12px 46px',
                     color: '#ffffff',
                     fontFamily: 'inherit',
                     fontSize: 14,
                     outline: 'none',
-                    height: 48,
-                    boxShadow: emailFocused ? '0 0 0 3px rgba(99, 102, 241, 0.12)' : 'none',
+                    height: 46,
+                    boxShadow: emailFocused ? 'var(--neu-pressed-sm), 0 0 0 3px rgba(255, 255, 255, 0.08)' : 'var(--neu-pressed-sm)',
                     transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                     boxSizing: 'border-box'
                   }}
@@ -229,8 +221,53 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* Gender Selection Field (including 3rd Gender) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{
+                fontSize: 11, fontWeight: 700, color: '#94a3b8',
+                textTransform: 'uppercase', letterSpacing: '0.08em'
+              }}>Gender</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{
+                  position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
+                  color: genderFocused ? '#ffffff' : '#475569', display: 'flex', alignItems: 'center',
+                  transition: 'color 0.25s ease',
+                  zIndex: 2,
+                }}>
+                  <Users size={16} />
+                </span>
+                <select
+                  value={form.gender}
+                  onChange={e => setForm(p => ({ ...p, gender: e.target.value }))}
+                  onFocus={() => setGenderFocused(true)}
+                  onBlur={() => setGenderFocused(false)}
+                  style={{
+                    width: '100%',
+                    background: 'var(--neu-sunken)',
+                    border: `1px solid ${genderFocused ? 'rgba(255, 255, 255, 0.35)' : 'var(--neu-border)'}`,
+                    borderRadius: 12,
+                    padding: '12px 16px 12px 46px',
+                    color: '#ffffff',
+                    fontFamily: 'inherit',
+                    fontSize: 14,
+                    outline: 'none',
+                    height: 46,
+                    boxShadow: genderFocused ? 'var(--neu-pressed-sm), 0 0 0 3px rgba(255, 255, 255, 0.08)' : 'var(--neu-pressed-sm)',
+                    transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="Male" style={{ background: '#121214', color: '#ffffff' }}>Male</option>
+                  <option value="Female" style={{ background: '#121214', color: '#ffffff' }}>Female</option>
+                  <option value="Other" style={{ background: '#121214', color: '#ffffff' }}>Other</option>
+                  <option value="Prefer not to say" style={{ background: '#121214', color: '#ffffff' }}>Prefer not to say</option>
+                </select>
+              </div>
+            </div>
+
             {/* Password Field */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <label style={{
                 fontSize: 11, fontWeight: 700, color: '#94a3b8',
                 textTransform: 'uppercase', letterSpacing: '0.08em'
@@ -238,8 +275,9 @@ export default function RegisterPage() {
               <div style={{ position: 'relative' }}>
                 <span style={{
                   position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
-                  color: passwordFocused ? '#818cf8' : '#475569', display: 'flex', alignItems: 'center',
-                  transition: 'color 0.25s ease'
+                  color: passwordFocused ? '#ffffff' : '#475569', display: 'flex', alignItems: 'center',
+                  transition: 'color 0.25s ease',
+                  zIndex: 2,
                 }}>
                   <Lock size={16} />
                 </span>
@@ -252,16 +290,16 @@ export default function RegisterPage() {
                   placeholder="•••••••• (min 6 chars)"
                   style={{
                     width: '100%',
-                    background: '#040406',
-                    border: `1px solid ${passwordFocused ? 'rgba(99, 102, 241, 0.35)' : 'rgba(255, 255, 255, 0.08)'}`,
+                    background: 'var(--neu-sunken)',
+                    border: `1px solid ${passwordFocused ? 'rgba(255, 255, 255, 0.35)' : 'var(--neu-border)'}`,
                     borderRadius: 12,
                     padding: '12px 16px 12px 46px',
                     color: '#ffffff',
                     fontFamily: 'inherit',
                     fontSize: 14,
                     outline: 'none',
-                    height: 48,
-                    boxShadow: passwordFocused ? '0 0 0 3px rgba(99, 102, 241, 0.12)' : 'none',
+                    height: 46,
+                    boxShadow: passwordFocused ? 'var(--neu-pressed-sm), 0 0 0 3px rgba(255, 255, 255, 0.08)' : 'var(--neu-pressed-sm)',
                     transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                     boxSizing: 'border-box'
                   }}
@@ -269,16 +307,16 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Premium Silver Submit Button */}
+            {/* Tactile Convex Submit Button */}
             <button
               type="submit"
               disabled={loading}
               style={{
                 width: '100%',
-                height: 48,
-                background: loading ? 'rgba(255, 255, 255, 0.08)' : 'linear-gradient(135deg, #ffffff 0%, #d1d5db 100%)',
-                color: loading ? '#64748b' : '#000000',
-                border: 'none',
+                height: 46,
+                background: loading ? 'var(--neu-surface)' : 'var(--neu-grad-convex)',
+                color: loading ? '#64748b' : '#ffffff',
+                border: '1px solid var(--neu-border)',
                 borderRadius: 12,
                 fontFamily: "'Plus Jakarta Sans', Inter, sans-serif",
                 fontSize: 14,
@@ -289,20 +327,28 @@ export default function RegisterPage() {
                 justifyContent: 'center',
                 gap: 10,
                 transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                boxShadow: loading ? 'none' : '0 8px 24px rgba(255,255,255,0.06)',
+                boxShadow: loading ? 'none' : 'var(--neu-flat-sm)',
                 letterSpacing: '-0.01em',
-                marginTop: 8
+                marginTop: 4
               }}
               onMouseEnter={e => {
                 if (!loading) {
                   e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 12px 30px rgba(255,255,255,0.15)';
+                  e.currentTarget.style.boxShadow = 'var(--neu-flat)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)';
                 }
               }}
               onMouseLeave={e => {
                 if (!loading) {
                   e.currentTarget.style.transform = 'none';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,255,255,0.06)';
+                  e.currentTarget.style.boxShadow = 'var(--neu-flat-sm)';
+                  e.currentTarget.style.borderColor = 'var(--neu-border)';
+                }
+              }}
+              onMouseDown={e => {
+                if (!loading) {
+                  e.currentTarget.style.transform = 'translateY(1px)';
+                  e.currentTarget.style.boxShadow = 'var(--neu-pressed-sm)';
                 }
               }}
             >
@@ -315,6 +361,21 @@ export default function RegisterPage() {
                 'Create Account'
               )}
             </button>
+
+            {/* Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', margin: '2px 0', gap: 12 }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--neu-border)' }} />
+              <span style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>OR</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--neu-border)' }} />
+            </div>
+
+            {/* 1 Single Google OAuth Sign-Up Button */}
+            <GoogleSignInButton
+              text="Sign up with Google"
+              onSuccess={handleGoogleSuccess}
+              gender={form.gender}
+              disabled={loading}
+            />
           </div>
         </form>
 
@@ -334,3 +395,4 @@ export default function RegisterPage() {
     </main>
   );
 }
+

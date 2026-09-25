@@ -73,7 +73,7 @@ async function main() {
   console.log("✅ SQL tables and data set up successfully!");
 
   // 2. Create Test User
-  const email = "test@flowforge.com";
+  const email = "test@jbsnap.com";
   const password = "password123";
   const username = "testuser";
   const passwordHash = await bcrypt.hash(password, 10);

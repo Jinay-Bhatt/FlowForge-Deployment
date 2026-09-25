@@ -1,4 +1,4 @@
-# Database Design Specification - FlowForge
+# Database Design Specification - JBSnap
 
 ## 1. Entity Relationship (ER) Diagram
 

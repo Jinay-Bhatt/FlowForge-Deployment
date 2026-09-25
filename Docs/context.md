@@ -1,11 +1,11 @@
-# FlowForge Platform Context
+# JBSnap Platform Context
 
 This file serves as the single source of truth for the workspace context.
 
 ---
 
 ## 1. Project Overview
-FlowForge is a **Visual No-Code API Builder + API Gateway Platform**. Non-coders and developers can drag-and-drop workflow blocks to design complete backend APIs. The platform executes workflows dynamically, generates code, and provides enterprise-grade gateway features.
+JBSnap is a **Visual No-Code API Builder + API Gateway Platform**. Non-coders and developers can drag-and-drop workflow blocks to design complete backend APIs. The platform executes workflows dynamically, generates code, and provides enterprise-grade gateway features.
 
 ### Core Pillars
 1. **Visual API Builder (React Flow)**: Drag-and-drop workflow canvas with 12+ node types.

@@ -40,11 +40,26 @@ function matchPart(pattern: string, val: number): boolean {
   return parseInt(pattern, 10) === val;
 }
 
+async function fetchPublishedWorkflowsWithRetry(attempts = 2) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await prisma.workflow.findMany({
+        where: { isPublished: true },
+        include: { project: true, gatewayConfig: true },
+      });
+    } catch (err: any) {
+      if (i === attempts - 1) throw err;
+      await new Promise((res) => setTimeout(res, 1000));
+    }
+  }
+  return [];
+}
+
 /**
  * Starts the background interval loop checking and executing scheduled workflows.
  */
 export function initScheduler(fastify: any) {
-  console.log("⏰ FlowForge Scheduler: Background cron engine initialized");
+  console.log("⏰ JBSnap Scheduler: Background cron engine initialized");
 
   // Run scheduler check every minute
   setInterval(async () => {
@@ -56,11 +71,8 @@ export function initScheduler(fastify: any) {
     }
 
     try {
-      // Find all published workflows with a scheduledNode trigger
-      const workflows = await prisma.workflow.findMany({
-        where: { isPublished: true },
-        include: { project: true, gatewayConfig: true }
-      });
+      // Find all published workflows with a scheduledNode trigger with retry on transient DB drop
+      const workflows = await fetchPublishedWorkflowsWithRetry();
 
       for (const w of workflows) {
         const nodes = (w.nodes as any[]) || [];
@@ -79,6 +91,7 @@ export function initScheduler(fastify: any) {
   }, 10000); // Check every 10 seconds to catch the start of each minute reliably
 }
 
+
 /**
  * Executes a single scheduled workflow in the background.
  */
@@ -94,7 +107,7 @@ async function executeScheduledWorkflow(workflow: any, triggerNodeId: string, fa
         body: {},
         query: {},
         params: {},
-        headers: { host: "localhost", "user-agent": "FlowForge-Cron-Engine" }
+        headers: { host: "localhost", "user-agent": "JBSnap-Cron-Engine" }
       },
       steps: {} as Record<string, any>
     };

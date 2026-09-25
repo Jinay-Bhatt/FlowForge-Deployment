@@ -59,7 +59,7 @@ export async function pushToGithub(
         owner,
         repo,
         path: firstFileKey,
-        message: "🌱 Initialize repository with FlowForge backend codebase",
+        message: "🌱 Initialize repository with JBSnap backend codebase",
         content: Buffer.from(firstFileContent).toString("base64"),
         branch,
       });
@@ -102,7 +102,7 @@ export async function pushToGithub(
   const { data: newCommitData } = await octokit.git.createCommit({
     owner,
     repo,
-    message: "🚀 Deploy compiled FlowForge visual backend updates",
+    message: "🚀 Deploy compiled JBSnap visual backend updates",
     tree: treeData.sha,
     parents: lastCommitSha ? [lastCommitSha] : [],
   });

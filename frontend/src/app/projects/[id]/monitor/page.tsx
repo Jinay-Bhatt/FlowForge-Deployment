@@ -28,7 +28,7 @@ function AnimatedCounter({ value, duration = 600 }: { value: number | string, du
     requestAnimationFrame(step);
   }, [numValue]);
 
-  if (value === '—') return <span>—</span>;
+  if (value === '-') return <span>-</span>;
   return <span>{displayValue.toLocaleString()}{isMs ? 'ms' : ''}</span>;
 }
 
@@ -257,7 +257,7 @@ export default function MonitorPage() {
           { label: 'TOTAL_PACKETS', value: allLogs.length, color: '#ffffff' },
           { label: 'STATUS_OK', value: allLogs.filter((l: any) => (l.responseStatus || l.status) < 400).length, color: '#10b981' },
           { label: 'STATUS_ERR', value: allLogs.filter((l: any) => (l.responseStatus || l.status) >= 400).length, color: '#ef4444' },
-          { label: 'AVG_LATENCY', value: allLogs.length ? Math.round(allLogs.reduce((a: number, l: any) => a + (l.latencyMs || l.latency || 0), 0) / allLogs.length) + 'ms' : '—', color: '#f59e0b' },
+          { label: 'AVG_LATENCY', value: allLogs.length ? Math.round(allLogs.reduce((a: number, l: any) => a + (l.latencyMs || l.latency || 0), 0) / allLogs.length) + 'ms' : '-', color: '#f59e0b' },
         ].map(s => (
           <div key={s.label} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{ color: 'var(--text-muted)' }}>{s.label}:</span>

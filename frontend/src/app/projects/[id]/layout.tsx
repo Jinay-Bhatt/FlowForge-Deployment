@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Zap, Radio, ChartColumn, Shield, Link2, Settings, Package } from 'lucide-react';
+import NotificationBell from '../../../components/NotificationBell';
+import { api } from '../../../services/api';
 
 const NAV_ITEMS = [
   { href: 'builder',   icon: Zap, label: 'Builder',   color: '#818cf8' },
@@ -27,7 +29,22 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
     const token = localStorage.getItem('ff_token');
     const u = localStorage.getItem('ff_user');
     if (!token) { router.replace('/login'); return; }
-    if (u) setUser(JSON.parse(u));
+    if (u) {
+      try {
+        const parsed = JSON.parse(u);
+        setUser(parsed);
+        if (parsed.avatar) setAvatar(parsed.avatar);
+      } catch {}
+    }
+    api.auth.me().then(res => {
+      if (res?.user) {
+        setUser(res.user);
+        if (res.user.avatar) {
+          setAvatar(res.user.avatar);
+          localStorage.setItem('ff_avatar', res.user.avatar);
+        }
+      }
+    }).catch(() => {});
     if (projectId) {
       fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/projects/${projectId}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -65,9 +82,9 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
           <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none', padding: '4px 8px', borderRadius: 7, transition: 'background 0.15s', color: 'var(--text-muted)' }}
             onMouseEnter={e => { (e.currentTarget as any).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as any).style.color = 'var(--text-secondary)'; }}
             onMouseLeave={e => { (e.currentTarget as any).style.background = 'transparent'; (e.currentTarget as any).style.color = 'var(--text-muted)'; }}>
-            <img src="/FlowForge.png" alt="FlowForge Logo" width="26" height="26" style={{ objectFit: 'contain' }} />
+            <img src="/logo.jpg" alt="JBSnap Logo" width="28" height="28" style={{ objectFit: 'cover', borderRadius: '50%' }} />
             <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', Inter, sans-serif" }}>
-              Flow<span style={{ background: 'linear-gradient(135deg,#ffffff,#a1a1aa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Forge</span>
+              JB<span style={{ background: 'linear-gradient(135deg,#ffffff,#a1a1aa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Snap</span>
             </span>
           </Link>
           <span style={{ color: 'var(--text-faint)', fontSize: 16 }}>/</span>
@@ -85,6 +102,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
 
           {/* Right side */}
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <NotificationBell />
             <Link href="/settings" style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, textDecoration: 'none', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 5 }}
               onMouseEnter={e => { (e.currentTarget as any).style.borderColor = 'var(--border-strong)'; (e.currentTarget as any).style.color = 'var(--text-secondary)'; }}
               onMouseLeave={e => { (e.currentTarget as any).style.borderColor = 'var(--border)'; (e.currentTarget as any).style.color = 'var(--text-muted)'; }}>

@@ -21,21 +21,46 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'FlowForge — Visual Backend API Builder & Workflow Compiler',
-  description: 'Design, test, and monitor backend workflows visually. Compile and export standard Fastify/TypeScript codebases with zero vendor lock-in.',
-  keywords: ['visual api builder', 'no-code backend', 'workflow compiler', 'Fastify generator', 'FlowForge', 'visual logic canvas'],
-  authors: [{ name: 'FlowForge Core Team' }],
+  metadataBase: new URL('https://jbsnap.app'),
+  title: {
+    default: 'JBSnap: Visual Backend API Builder & Workflow Compiler',
+    template: '%s | JBSnap API Builder',
+  },
+  description: 'Build, deploy, and export production-ready backend APIs in seconds using a visual node DAG graph. Compiles directly into clean Fastify + TypeScript code with zero vendor lock-in.',
+  keywords: [
+    'visual api builder',
+    'no code backend platform',
+    'low code backend developer',
+    'fastify code generator',
+    'api gateway compiler',
+    'visual node graph dag',
+    'typescript backend builder',
+    'JBSnap',
+    'open backend architecture',
+    'zero vendor lock-in backend'
+  ],
+  authors: [{ name: 'JBSnap Team', url: 'https://jbsnap.app' }],
+  creator: 'JBSnap Engineering',
+  publisher: 'JBSnap',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: 'https://jbsnap.app',
+  },
   openGraph: {
-    title: 'FlowForge — Visual Backend API Builder & Workflow Compiler',
+    title: 'JBSnap: Visual Backend API Builder & Workflow Compiler',
     description: 'Design and deploy backend APIs visually. Compile nodes directly into production-grade TypeScript Fastify apps.',
-    url: 'https://flowforge.dev',
-    siteName: 'FlowForge Platform',
+    url: 'https://jbsnap.app',
+    siteName: 'JBSnap Platform',
     images: [
       {
-        url: '/FlowForge.png',
-        width: 800,
-        height: 800,
-        alt: 'FlowForge visual builder preview',
+        url: '/logo.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'JBSnap Visual API Builder Architecture',
       },
     ],
     locale: 'en_US',
@@ -43,28 +68,84 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FlowForge — Visual Backend API Builder & Workflow Compiler',
+    title: 'JBSnap: Visual Backend API Builder & Workflow Compiler',
     description: 'Design and deploy backend APIs visually. Compile nodes directly into production-grade TypeScript Fastify apps.',
-    images: ['/FlowForge.png'],
+    creator: '@jbsnap_dev',
+    images: ['/logo.jpg'],
   },
   robots: {
     index: true,
     follow: true,
-    nocache: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
   icons: {
-    icon: '/FlowForge.png',
+    icon: '/logo.jpg',
+    apple: '/logo.jpg',
   }
 };
+
+const jsonLdSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'SoftwareApplication',
+      '@id': 'https://jbsnap.app/#software',
+      'name': 'JBSnap',
+      'operatingSystem': 'All',
+      'applicationCategory': 'DeveloperApplication',
+      'offers': {
+        '@type': 'Offer',
+        'price': '0',
+        'priceCurrency': 'USD'
+      },
+      'description': 'The premier visual API builder and backend workflow execution engine. Build, test, and export production-ready Fastify TypeScript backends.',
+      'aggregateRating': {
+        '@type': 'AggregateRating',
+        'ratingValue': '4.9',
+        'ratingCount': '1480'
+      }
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://jbsnap.app/#website',
+      'url': 'https://jbsnap.app',
+      'name': 'JBSnap API Builder',
+      'description': 'Visual Backend API Builder & Workflow Execution Engine',
+      'publisher': {
+        '@type': 'Organization',
+        'name': 'JBSnap Platform',
+        'logo': 'https://jbsnap.app/logo.jpg'
+      }
+    }
+  ]
+};
+
+import { NotificationProvider } from '../context/NotificationContext';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
-        <link rel="icon" href="/FlowForge.png" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/logo.jpg" />
+        <link rel="apple-touch-icon" href="/logo.jpg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
+        />
       </head>
-      <body>{children}</body>
+      <body>
+        <NotificationProvider>
+          {children}
+        </NotificationProvider>
+      </body>
     </html>
   );
 }

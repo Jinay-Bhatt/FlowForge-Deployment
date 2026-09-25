@@ -5,6 +5,12 @@ import { FastifyInstance } from "fastify";
  * Initializes the Socket.IO server and binds it to the Fastify HTTP server instance.
  * Decorates the Fastify instance with the Socket.IO server manager.
  */
+let ioInstance: Server | null = null;
+
+export function getIO(): Server | null {
+  return ioInstance;
+}
+
 export function initWebsocket(fastify: FastifyInstance): Server {
   const io = new Server(fastify.server, {
     cors: {
@@ -12,6 +18,8 @@ export function initWebsocket(fastify: FastifyInstance): Server {
       methods: ["GET", "POST"],
     },
   });
+
+  ioInstance = io;
 
   // Intercept all room-based emits to clone and broadcast metrics globally
   const originalTo = io.to.bind(io);
@@ -50,6 +58,15 @@ export function initWebsocket(fastify: FastifyInstance): Server {
       socket.join(projectId);
       fastify.log.info(
         `👤 Client ${socket.id} joined project room: ${projectId}`
+      );
+    });
+
+    // Join a private user room for scoped real-time notifications
+    socket.on("join-user", (userId: string) => {
+      if (!userId) return;
+      socket.join(`user:${userId}`);
+      fastify.log.info(
+        `👤 Client ${socket.id} joined user room: user:${userId}`
       );
     });
 

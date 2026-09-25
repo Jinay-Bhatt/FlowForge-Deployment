@@ -119,12 +119,12 @@ export async function getAnalytics(
 
     // Summary stats
     const totalRequests = logs.length;
-    const totalErrors = logs.filter((l) => l.responseStatus >= 400).length;
-    const allLatencies = logs.map((l) => l.latencyMs).sort((a, b) => a - b);
+    const totalErrors = logs.filter((l: any) => l.responseStatus >= 400).length;
+    const allLatencies = logs.map((l: any) => l.latencyMs).sort((a: number, b: number) => a - b);
     const avgLatency =
       allLatencies.length > 0
         ? Math.round(
-            allLatencies.reduce((a, b) => a + b, 0) / allLatencies.length
+            allLatencies.reduce((a: number, b: number) => a + b, 0) / allLatencies.length
           )
         : 0;
     const p95Latency =
@@ -171,12 +171,15 @@ export async function getLogs(request: FastifyRequest, reply: FastifyReply) {
   try {
     const project = await prisma.project.findFirst({
       where: { id: projectId, ownerId: user.id },
+      include: { owner: { select: { plan: true } } },
     });
     if (!project) {
       return reply.status(404).send({ error: "Project not found or unauthorized" });
     }
 
-    const take = Math.min(parseInt(limit), 200);
+    const isPro = project.owner?.plan === "PRO_MONTHLY" || project.owner?.plan === "PRO_YEARLY";
+    const maxAllowed = isPro ? 200 : 10;
+    const take = Math.min(parseInt(limit) || 50, maxAllowed);
     const skip = (parseInt(page) - 1) * take;
 
     const where: any = { workflow: { projectId } };
@@ -184,7 +187,7 @@ export async function getLogs(request: FastifyRequest, reply: FastifyReply) {
     if (status === "error") where.responseStatus = { gte: 400 };
     if (status === "success") where.responseStatus = { lt: 400 };
 
-    const [logs, total] = await Promise.all([
+    const [logs, rawTotal] = await Promise.all([
       prisma.executionLog.findMany({
         where,
         orderBy: { createdAt: "desc" },
@@ -197,6 +200,8 @@ export async function getLogs(request: FastifyRequest, reply: FastifyReply) {
       prisma.executionLog.count({ where }),
     ]);
 
+    const total = isPro ? rawTotal : Math.min(rawTotal, 10);
+
     return reply.send({
       logs,
       pagination: {
@@ -204,6 +209,8 @@ export async function getLogs(request: FastifyRequest, reply: FastifyReply) {
         page: parseInt(page),
         limit: take,
         pages: Math.ceil(total / take),
+        isLimited: !isPro,
+        plan: project.owner?.plan || "FREE",
       },
     });
   } catch (error: any) {

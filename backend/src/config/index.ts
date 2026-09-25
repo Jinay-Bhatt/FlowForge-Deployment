@@ -38,5 +38,11 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET as string,
   encryptionKey: process.env.ENCRYPTION_KEY as string,
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
+  smtp: {
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587,
+    user: process.env.SMTP_USER || "",
+    pass: process.env.SMTP_PASS || "",
+    from: process.env.SMTP_FROM || "dualithjbsnap@gmail.com",
+  },
 };
-  

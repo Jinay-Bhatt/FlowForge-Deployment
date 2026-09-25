@@ -23,7 +23,7 @@ interface GeneratedWorkflow {
   description: string;
 }
 
-const systemPrompt = `You are a backend API workflow generator for the FlowForge platform.
+const systemPrompt = `You are a backend API workflow generator for the JBSnap platform.
 Given a user's description, generate a complete workflow JSON with nodes and edges for a visual API builder.
 
 Node types available:
@@ -103,7 +103,7 @@ async function queryAIProvider(provider: string, prompt: string): Promise<Genera
       throw new Error("GROQ_API_KEY is not configured in .env");
     }
 
-    const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+    const model = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
     const response = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {

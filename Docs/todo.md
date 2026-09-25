@@ -1,6 +1,6 @@
-# FlowForge Backend Development TODO List
+# JBSnap Backend Development TODO List
 
-This file tracks the implementation progress of the FlowForge backend server.
+This file tracks the implementation progress of the JBSnap backend server.
 
 ---
 
@@ -105,8 +105,8 @@ This file tracks the implementation progress of the FlowForge backend server.
 
 ### ✅ Phase 17: Layout Spacing, Logo Redesign & Branding
 - [x] Adjusted hero and section top padding/margin to reduce spacing by 128px for a tight, professional scroll experience.
-- [x] Standardized "FlowForge" logo rendering with silver gradient (`linear-gradient(135deg,#ffffff,#a1a1aa)`) across all layout headers and footer.
-- [x] Generated a new visual double-'F' high-tech logo (`FlowForge.png`) representing connected visual nodes.
+- [x] Standardized "JBSnap" logo rendering with silver gradient (`linear-gradient(135deg,#ffffff,#a1a1aa)`) across all layout headers and footer.
+- [x] Generated a new visual double-'F' high-tech logo (`JBSnap.png`) representing connected visual nodes.
 - [x] Cleaned up footer: removed non-functional mockup subdomains, removed duplicate API reference link, and centered the footer copyright text.
 
 ### ✅ Phase 18: Profile Settings & User Validation
@@ -134,7 +134,7 @@ This file tracks the implementation progress of the FlowForge backend server.
 - [x] Connected landing page's "Watch Demo" CTA button to scroll and auto-play visual simulation.
 - [x] Balanced the Capabilities bento grid section with responsive CSS templates to avoid empty slots.
 - [x] Integrated real-time Socket.IO global client listener on landing page to stream actual server connections and request latencies.
-- [x] Replaced the default Vercel favicon with the FlowForge brand logo (configured as icon.png in the app router and fallback favicon.ico in the public folder), ensuring the original FlowForge logo displays properly next to the title on all page tabs.
+- [x] Replaced the default Vercel favicon with the JBSnap brand logo (configured as icon.png in the app router and fallback favicon.ico in the public folder), ensuring the original JBSnap logo displays properly next to the title on all page tabs.
 - [x] Redesigned the authentication pages with high-tech glassmorphism, background glow mesh elements, interactive focus-triggered input highlighting, and Chrome autofill overrides to maintain sleek styling.
 - [x] Removed the noisy "Gateway Stream" live log panel from the global workspace console dashboard to declutter the interface, leaving latency and request aggregates consolidated in the System Health metrics.
 - [x] Fixed the dashboard stat counter bug where the AnimCounter component became stuck at 0. Refactored it to use requestAnimationFrame to respond dynamically when asynchronous data finishes loading.

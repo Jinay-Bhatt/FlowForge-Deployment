@@ -1,12 +1,12 @@
-# Software Requirements Specification (SRS) - FlowForge
+# Software Requirements Specification (SRS) - JBSnap
 
 ## 1. Introduction
 
 ### 1.1 Purpose
-This document details the Software Requirements Specification (SRS) for the **FlowForge** platform. It outlines functional, data, interface, and performance specifications for developers, engineers, and QA teams.
+This document details the Software Requirements Specification (SRS) for the **JBSnap** platform. It outlines functional, data, interface, and performance specifications for developers, engineers, and QA teams.
 
 ### 1.2 System Scope
-FlowForge consists of a Next.js visual frontend client, a Fastify backend server running a workflow compiler/runner, and a PostgreSQL database. It targets API building, gateway management, and standardized Node.js/TypeScript code compilation.
+JBSnap consists of a Next.js visual frontend client, a Fastify backend server running a workflow compiler/runner, and a PostgreSQL database. It targets API building, gateway management, and standardized Node.js/TypeScript code compilation.
 
 ---
 

@@ -1,14 +1,14 @@
-# Product Requirements Document (PRD) - FlowForge
+# Product Requirements Document (PRD) - JBSnap
 
 ## 1. Document Overview
-This document specifies the Product Requirements for **FlowForge**, an open visual backend development platform and gateway. It provides product context, core objectives, user personas, high-level features, and scope management.
+This document specifies the Product Requirements for **JBSnap**, an open visual backend development platform and gateway. It provides product context, core objectives, user personas, high-level features, and scope management.
 
 ---
 
 ## 2. Product Vision & Objectives
 Traditional visual backend builders lock developers into their ecosystem by executing logic on proprietary runtimes. When a project outgrows the platform, developers face high migration costs and rewrite overhead.
 
-**FlowForge** solves this vendor lock-in by acting as both a visual designer and an **application compiler**. It empowers developers to build APIs visually while retaining full code ownership through standard, deployable TypeScript code export.
+**JBSnap** solves this vendor lock-in by acting as both a visual designer and an **application compiler**. It empowers developers to build APIs visually while retaining full code ownership through standard, deployable TypeScript code export.
 
 ### Core Objectives
 * **API Assembly Speed**: Allow developers to visually construct standard REST endpoints in under 2 minutes.
@@ -23,12 +23,12 @@ Traditional visual backend builders lock developers into their ecosystem by exec
 ### Persona A: The Indie Hacker (Alex)
 * **Goal**: Build and validate a SaaS prototype in days.
 * **Pain Point**: Setup time for routes, auth, database mapping, and environment configs slows validation.
-* **Scenario**: Alex uses FlowForge to drag and drop database CRUD nodes, secures them with JWT, tests them inside the editor, and exports a code package to push to a private GitHub repo for hosting on Vercel/Render.
+* **Scenario**: Alex uses JBSnap to drag and drop database CRUD nodes, secures them with JWT, tests them inside the editor, and exports a code package to push to a private GitHub repo for hosting on Vercel/Render.
 
 ### Persona B: The Frontend Developer (Sarah)
 * **Goal**: Focus on user experiences without writing custom Node/Prisma boilerplate.
 * **Pain Point**: Relying on mock endpoints or coordinating with backend teams for simple CRUD features.
-* **Scenario**: Sarah visually models the database schema and defines endpoints using the canvas. She writes custom JavaScript in code nodes to shape output formats, then deploys to FlowForge's managed runtime instantly.
+* **Scenario**: Sarah visually models the database schema and defines endpoints using the canvas. She writes custom JavaScript in code nodes to shape output formats, then deploys to JBSnap's managed runtime instantly.
 
 ---
 

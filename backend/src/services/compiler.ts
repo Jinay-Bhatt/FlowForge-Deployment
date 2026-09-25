@@ -151,7 +151,7 @@ model Product {
     info: {
       title: projectName,
       version: "1.0.0",
-      description: `REST API Documentation for ${projectName} compiled by FlowForge.`,
+      description: `REST API Documentation for ${projectName} compiled by JBSnap.`,
     },
     paths: swaggerSpecPaths,
   };
@@ -160,7 +160,7 @@ model Product {
 
   // 5. .env.example
   fileTree[".env.example"] = `PORT=5000
-DATABASE_URL="postgresql://postgres:password@localhost:5432/flowforge_exported?sslmode=require"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/jbsnap_exported?sslmode=require"
 JWT_SECRET="exported-application-super-secret-jwt-key"
 `;
 
@@ -197,7 +197,7 @@ services:
       - "5000:5000"
     environment:
       - PORT=5000
-      - DATABASE_URL=postgresql://postgres:password@db:5432/flowforge_exported?sslmode=require
+      - DATABASE_URL=postgresql://postgres:password@db:5432/jbsnap_exported?sslmode=require
       - JWT_SECRET=compose-jwt-secret-key-1234
     depends_on:
       - db
@@ -209,7 +209,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=flowforge_exported
+      - POSTGRES_DB=jbsnap_exported
     volumes:
       - pgdata:/var/lib/postgresql/data
 
@@ -556,6 +556,162 @@ export async function registerRoutes(fastify: FastifyInstance) {
           return reply.status(401).send({ error: "Unauthorized: Invalid API Key" });
         }
         context.steps["${node.id}"] = { valid: true };
+`;
+      }
+
+      else if (node.type === "gmailNode" || node.type === "gmail") {
+        const toTemp = node.data?.to || "";
+        const subjectTemp = node.data?.subject || "Notification";
+        const bodyTemp = node.data?.body || "";
+        const token = node.data?.accessToken || "";
+
+        const escapedTo = toTemp.replace(/`/g, "\\`").replace(/\$/g, "\\$");
+        const escapedSub = subjectTemp.replace(/`/g, "\\`").replace(/\$/g, "\\$");
+        const escapedBody = bodyTemp.replace(/`/g, "\\`").replace(/\$/g, "\\$");
+
+        apiFileContent += `
+        const to_${node.id} = \\\`${escapedTo}\\\`.replace(/\\\\\\$([a-zA-Z0-9_\\\\.]+)/g, (match, path) => {
+          const val = resolveVariable(path, context);
+          return val !== undefined ? String(val) : "";
+        });
+        const sub_${node.id} = \\\`${escapedSub}\\\`.replace(/\\\\\\$([a-zA-Z0-9_\\\\.]+)/g, (match, path) => {
+          const val = resolveVariable(path, context);
+          return val !== undefined ? String(val) : "";
+        });
+        const body_${node.id} = \\\`${escapedBody}\\\`.replace(/\\\\\\$([a-zA-Z0-9_\\\\.]+)/g, (match, path) => {
+          const val = resolveVariable(path, context);
+          return val !== undefined ? String(val) : "";
+        });
+
+        if ("${token}") {
+          const rawMessage = \`To: \${to_${node.id}}\\r\\nSubject: \${sub_${node.id}}\\r\\nContent-Type: text/plain; charset=utf-8\\r\\n\\r\\n\${body_${node.id}}\`;
+          const encodedMessage = Buffer.from(rawMessage).toString("base64url");
+          const gmailRes = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+            method: "POST",
+            headers: { "Authorization": "Bearer ${token}", "Content-Type": "application/json" },
+            body: JSON.stringify({ raw: encodedMessage }),
+          });
+          const gmailData = await gmailRes.json();
+          context.steps["${node.id}"] = { status: gmailRes.status, sent: gmailRes.ok, data: gmailData };
+        } else {
+          context.steps["${node.id}"] = { status: 200, sent: true, simulated: true, to: to_${node.id}, subject: sub_${node.id}, body: body_${node.id} };
+        }
+`;
+      }
+
+      else if (node.type === "googleSheetsNode" || node.type === "googleSheets") {
+        const action = node.data?.action || "APPEND_ROW";
+        const sheetId = node.data?.spreadsheetId || "";
+        const range = node.data?.range || "Sheet1!A1";
+        const rowDataTemp = node.data?.rowData || "[]";
+        const apiKey = node.data?.apiKey || "";
+
+        const escapedRow = rowDataTemp.replace(/`/g, "\\`").replace(/\$/g, "\\$");
+
+        apiFileContent += `
+        let rowValues_${node.id}: any[] = [];
+        try {
+          const interpolatedRow = \\\`${escapedRow}\\\`.replace(/\\\\\\$([a-zA-Z0-9_\\\\.]+)/g, (match, path) => {
+            const val = resolveVariable(path, context);
+            return val !== undefined ? JSON.stringify(val) : "";
+          });
+          rowValues_${node.id} = JSON.parse(interpolatedRow);
+        } catch {
+          rowValues_${node.id} = ["${escapedRow}"];
+        }
+
+        if ("${sheetId}" && "${apiKey}") {
+          const sheetsUrl = "${action}" === "APPEND_ROW"
+            ? \`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/\${encodeURIComponent("${range}")}:append?valueInputOption=USER_ENTERED&key=${apiKey}\`
+            : \`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/\${encodeURIComponent("${range}")}?key=${apiKey}\`;
+          
+          const sheetsRes = await fetch(sheetsUrl, {
+            method: "${action}" === "APPEND_ROW" ? "POST" : "GET",
+            headers: { "Content-Type": "application/json" },
+            body: "${action}" === "APPEND_ROW" ? JSON.stringify({ values: [rowValues_${node.id}] }) : undefined,
+          });
+          const sheetsData = await sheetsRes.json();
+          context.steps["${node.id}"] = { status: sheetsRes.status, data: sheetsData };
+        } else {
+          context.steps["${node.id}"] = { status: 200, simulated: true, action: "${action}", spreadsheetId: "${sheetId}", values: rowValues_${node.id} };
+        }
+`;
+      }
+
+      else if (node.type === "txtFileNode" || node.type === "txtFile") {
+        const action = node.data?.action || "WRITE_FILE";
+        const filePath = node.data?.filePath || "./data/output.txt";
+        const contentTemp = node.data?.content || "";
+
+        const escapedContent = contentTemp.replace(/`/g, "\\`").replace(/\$/g, "\\$");
+
+        apiFileContent += `
+        const fs_${node.id} = await import("node:fs/promises");
+        const path_${node.id} = await import("node:path");
+        const targetPath_${node.id} = path_${node.id}.resolve("${filePath}");
+        await fs_${node.id}.mkdir(path_${node.id}.dirname(targetPath_${node.id}), { recursive: true });
+
+        const content_${node.id} = \\\`${escapedContent}\\\`.replace(/\\\\\\$([a-zA-Z0-9_\\\\.]+)/g, (match, path) => {
+          const val = resolveVariable(path, context);
+          return val !== undefined ? String(val) : "";
+        });
+
+        if ("${action}" === "READ_FILE") {
+          const text_${node.id} = await fs_${node.id}.readFile(targetPath_${node.id}, "utf-8");
+          context.steps["${node.id}"] = { success: true, action: "READ_FILE", content: text_${node.id} };
+        } else if ("${action}" === "APPEND_FILE") {
+          await fs_${node.id}.appendFile(targetPath_${node.id}, content_${node.id} + "\\n", "utf-8");
+          context.steps["${node.id}"] = { success: true, action: "APPEND_FILE", filePath: targetPath_${node.id} };
+        } else {
+          await fs_${node.id}.writeFile(targetPath_${node.id}, content_${node.id}, "utf-8");
+          context.steps["${node.id}"] = { success: true, action: "WRITE_FILE", filePath: targetPath_${node.id} };
+        }
+`;
+      }
+
+      else if (node.type === "aiNode" || node.type === "ai") {
+        const provider = (node.data?.provider || "groq").toLowerCase();
+        const model = node.data?.model || (provider === "gemini" ? "gemini-1.5-flash" : provider === "claude" ? "claude-3-5-sonnet" : provider === "openai" ? "gpt-4o-mini" : "llama-3.3-70b-versatile");
+        const apiKey = node.data?.apiKey || "";
+        const sysPrompt = node.data?.systemPrompt || "You are a helpful assistant.";
+        const userPromptTemp = node.data?.prompt || "$request.body.prompt";
+
+        const escapedSys = sysPrompt.replace(/`/g, "\\`").replace(/\$/g, "\\$");
+        const escapedUser = userPromptTemp.replace(/`/g, "\\`").replace(/\$/g, "\\$");
+
+        apiFileContent += `
+        const provider_${node.id} = "${provider}";
+        const apiKey_${node.id} = "${apiKey}" || process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY || "";
+        const userPrompt_${node.id} = \\\`${escapedUser}\\\`.replace(/\\\\\\$([a-zA-Z0-9_\\\\.]+)/g, (match, path) => {
+          const val = resolveVariable(path, context);
+          return val !== undefined ? String(val) : "";
+        });
+
+        let aiText_${node.id} = "";
+        if (provider_${node.id} === "groq" || provider_${node.id} === "openai") {
+          const endpoint = provider_${node.id} === "groq" ? "https://api.groq.com/openai/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + apiKey_${node.id} },
+            body: JSON.stringify({
+              model: "${model}",
+              messages: [{ role: "system", content: "${escapedSys}" }, { role: "user", content: userPrompt_${node.id} }]
+            }),
+          });
+          const json = await res.json();
+          aiText_${node.id} = json.choices?.[0]?.message?.content || JSON.stringify(json);
+        } else if (provider_${node.id} === "gemini") {
+          const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=" + apiKey_${node.id};
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ parts: [{ text: "${escapedSys}\\n\\n" + userPrompt_${node.id} }] }] }),
+          });
+          const json = await res.json();
+          aiText_${node.id} = json.candidates?.[0]?.content?.parts?.[0]?.text || JSON.stringify(json);
+        }
+
+        context.steps["${node.id}"] = { provider: provider_${node.id}, model: "${model}", response: aiText_${node.id} };
 `;
       }
 

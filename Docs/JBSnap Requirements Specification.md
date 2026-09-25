@@ -1,4 +1,4 @@
-FlowForge - Complete Requirements Specification
+JBSnap - Complete Requirements Specification
 Functional Requirements
 Authentication
 FR-1 User Registration

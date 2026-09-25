@@ -1,15 +1,15 @@
-FlowForge - Deployment & Hosting Architecture
+JBSnap - Deployment & Hosting Architecture
 Overview
 One of the most common questions when building a no-code API platform is:
 “If users create APIs on my platform, where do those APIs actually run?”
 The answer is simple:
 Users do not get a separate server.
-Instead, all APIs execute through a centralized FlowForge Execution Engine running on FlowForge infrastructure.
+Instead, all APIs execute through a centralized JBSnap Execution Engine running on JBSnap infrastructure.
 ________________________________________
-How FlowForge Deploys APIs
+How JBSnap Deploys APIs
 When a user creates a workflow:
 Request ↓ Database Query ↓ Response
-FlowForge stores the workflow as JSON.
+JBSnap stores the workflow as JSON.
 Example:
 {
   "projectId": "123",
@@ -23,31 +23,31 @@ Example:
 The workflow is stored in the database.
 <!-- No backend code is generated. -->
 <!-- new start -->
-FlowForge supports two deployment modes:
+JBSnap supports two deployment modes:
 Mode 1: Managed Runtime
-Workflows execute dynamically through the FlowForge Execution Engine.
+Workflows execute dynamically through the JBSnap Execution Engine.
 Mode 2: Code Export
-FlowForge generates deployable backend source code that users can host independently.
+JBSnap generates deployable backend source code that users can host independently.
 <!-- new end -->
 No separate server is created.
 ________________________________________
 Runtime Architecture
 When a request arrives:
-Client ↓ FlowForge API Gateway ↓ Workflow Execution Engine ↓ Database / Services ↓ Response
+Client ↓ JBSnap API Gateway ↓ Workflow Execution Engine ↓ Database / Services ↓ Response
 The execution engine reads the workflow definition and executes it dynamically.
 ________________________________________
 Example
 User publishes:
 GET /products
 Generated endpoint:
-https://flowforge-api.onrender.com/api/project123/products
+https://jbsnap-api.onrender.com/api/project123/products
 Request Flow:
 Client ↓ /api/project123/products ↓ Find Workflow ↓ Execute Workflow ↓ Return Response
 ________________________________________
 Why This Approach Is Better
 Instead of creating:
 1 Server Per User
-FlowForge creates:
+JBSnap creates:
 1 Shared Platform
 Benefits:
 •	Easier deployment
@@ -64,7 +64,7 @@ Technology:
 Hosting:
 •	Vercel
 Example:
-https://flowforge.vercel.app
+https://jbsnap.vercel.app
 Responsibilities:
 •	Dashboard
 •	Workflow Builder
@@ -80,7 +80,7 @@ Hosting:
 •	Railway
 •	Render
 Example:
-https://flowforge-api.onrender.com
+https://jbsnap-api.onrender.com
 Responsibilities:
 •	Authentication
 •	Workflow Execution
@@ -104,26 +104,26 @@ Responsibilities:
 ________________________________________
 Production Architecture
 Frontend
-flowforge.com
+jbsnap.com
 ↓
 Backend
-api.flowforge.com
+api.jbsnap.com
 ↓
 Database
-database.flowforge.com
+database.jbsnap.com
 ________________________________________
 Custom Domain Support (Future)
 Users may want their APIs to use their own domains.
 Example:
 api.mycompany.com
 instead of
-api.flowforge.com
-FlowForge can support:
+api.jbsnap.com
+JBSnap can support:
 Custom Domain Mapping
 Client Request:
 api.mycompany.com/products
 ↓
-FlowForge Gateway
+JBSnap Gateway
 ↓
 Workflow Engine
 ↓
@@ -144,7 +144,7 @@ Recommended Portfolio Setup
 Frontend: Vercel
 Backend: Railway
 Database: Neon PostgreSQL
-Domain: flowforge.xyz
+Domain: jbsnap.xyz
 Estimated Cost: ₹500-₹1500/year
 ________________________________________
 Environment Variables
@@ -205,7 +205,7 @@ Microservices
 •	Monitoring Service
 ________________________________________
 Major Technical Challenge
-The hardest component in FlowForge is not deployment.
+The hardest component in JBSnap is not deployment.
 The hardest component is:
 Workflow Execution Engine
 Responsibilities:
@@ -239,5 +239,5 @@ Generated APIs: Executed dynamically from workflow JSON
 Supported Hosting Models:
 • Managed Cloud Runtime (SaaS via Vercel + Railway/Render + Neon DB)
 
-*Note: While the FlowForge builder platform itself is fully managed as a SaaS service, users can compile and download their visual API workflows as standard Node.js/Fastify codebases to host on their own infrastructure.*
+*Note: While the JBSnap builder platform itself is fully managed as a SaaS service, users can compile and download their visual API workflows as standard Node.js/Fastify codebases to host on their own infrastructure.*
 <!-- new end -->

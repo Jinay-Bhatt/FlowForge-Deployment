@@ -1,15 +1,18 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import bcrypt from "bcryptjs";
 import { prisma } from "../services/db.js";
+import { verifyEmailExistence } from "../services/emailVerification.js";
+import { createNotification } from "../services/notifications.js";
 
 export async function registerUser(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const { username, email, password } = request.body as {
+  const { username, email, password, gender } = request.body as {
     username?: string;
     email?: string;
     password?: string;
+    gender?: string;
   };
 
   if (!username || !email || !password) {
@@ -31,6 +34,15 @@ export async function registerUser(
     });
   }
 
+  // Real-time Email Existence & MX DNS Lookup Verification
+  const emailVerification = await verifyEmailExistence(email);
+  if (!emailVerification.valid) {
+    return reply.status(400).send({
+      error: "Invalid Email Address",
+      message: emailVerification.reason || "The email address provided does not exist or cannot receive mail.",
+    });
+  }
+
   try {
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -49,8 +61,18 @@ export async function registerUser(
         username,
         email,
         passwordHash,
+        gender: gender || "Prefer not to say",
       },
     });
+
+    // Dispatch welcome notification
+    createNotification({
+      userId: user.id,
+      title: "Welcome to JBSnap!",
+      message: "Get started by creating your first project and designing visual API workflows.",
+      type: "info",
+      link: "/dashboard",
+    }).catch(() => {});
 
     return reply.status(201).send({
       message: "User registered successfully",
@@ -58,6 +80,11 @@ export async function registerUser(
         id: user.id,
         username: user.username,
         email: user.email,
+        avatar: user.avatar || null,
+        gender: user.gender,
+        plan: user.plan || "FREE",
+        aiGenerationsCount: user.aiGenerationsCount || 0,
+        aiGenerationsResetAt: user.aiGenerationsResetAt || user.createdAt,
         createdAt: user.createdAt,
       },
     });
@@ -87,7 +114,7 @@ export async function loginUser(request: FastifyRequest, reply: FastifyReply) {
       where: { email },
     });
 
-    if (!user) {
+    if (!user || !user.passwordHash) {
       return reply.status(401).send({
         error: "Unauthorized: Invalid email or password",
       });
@@ -113,6 +140,78 @@ export async function loginUser(request: FastifyRequest, reply: FastifyReply) {
         id: user.id,
         username: user.username,
         email: user.email,
+        avatar: user.avatar || null,
+        gender: user.gender || "Prefer not to say",
+        plan: user.plan || "FREE",
+        aiGenerationsCount: user.aiGenerationsCount || 0,
+        aiGenerationsResetAt: user.aiGenerationsResetAt || user.createdAt,
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (error: any) {
+    request.log.error(error);
+    return reply.status(500).send({
+      error: "Internal Server Error",
+      details: error.message,
+    });
+  }
+}
+
+export async function googleLogin(request: FastifyRequest, reply: FastifyReply) {
+  const { email, name, picture, gender } = request.body as {
+    email?: string;
+    name?: string;
+    picture?: string;
+    gender?: string;
+  };
+
+  if (!email) {
+    return reply.status(400).send({
+      error: "Bad Request: email is required for Google login",
+    });
+  }
+
+  try {
+    let user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      const username = name || email.split("@")[0] || "Google User";
+      user = await prisma.user.create({
+        data: {
+          username,
+          email,
+          avatar: picture || null,
+          passwordHash: null,
+          gender: gender || "Prefer not to say",
+          plan: "FREE",
+        },
+      });
+    } else if (!user.avatar && picture) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { avatar: picture },
+      });
+    }
+
+    const token = await reply.jwtSign({
+      id: user.id,
+      email: user.email,
+    });
+
+    return reply.send({
+      message: "Google authentication successful",
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar || picture || null,
+        gender: user.gender || "Prefer not to say",
+        plan: user.plan || "FREE",
+        aiGenerationsCount: user.aiGenerationsCount || 0,
+        aiGenerationsResetAt: user.aiGenerationsResetAt || user.createdAt,
         createdAt: user.createdAt,
       },
     });
@@ -134,6 +233,11 @@ export async function getMe(request: FastifyRequest, reply: FastifyReply) {
         id: true,
         username: true,
         email: true,
+        avatar: true,
+        gender: true,
+        plan: true,
+        aiGenerationsCount: true,
+        aiGenerationsResetAt: true,
         createdAt: true,
       },
     });
@@ -153,8 +257,10 @@ export async function getMe(request: FastifyRequest, reply: FastifyReply) {
 }
 
 export async function updateProfile(request: FastifyRequest, reply: FastifyReply) {
-  const { username, oldPassword, newPassword } = request.body as {
+  const { username, gender, avatar, oldPassword, newPassword } = request.body as {
     username?: string;
+    gender?: string;
+    avatar?: string | null;
     oldPassword?: string;
     newPassword?: string;
   };
@@ -171,20 +277,24 @@ export async function updateProfile(request: FastifyRequest, reply: FastifyReply
     }
 
     const updateData: any = {};
-    if (username) updateData.username = username;
+    if (username !== undefined) updateData.username = username;
+    if (gender !== undefined) updateData.gender = gender;
+    if (avatar !== undefined) updateData.avatar = avatar;
 
     if (newPassword) {
-      if (!oldPassword) {
-        return reply.status(400).send({
-          error: "Current password is required to change to a new password",
-        });
-      }
+      if (user.passwordHash) {
+        if (!oldPassword) {
+          return reply.status(400).send({
+            error: "Current password is required to change to a new password",
+          });
+        }
 
-      const passwordMatch = await bcrypt.compare(oldPassword, user.passwordHash);
-      if (!passwordMatch) {
-        return reply.status(400).send({
-          error: "The current password you entered is incorrect",
-        });
+        const passwordMatch = await bcrypt.compare(oldPassword, user.passwordHash);
+        if (!passwordMatch) {
+          return reply.status(400).send({
+            error: "The current password you entered is incorrect",
+          });
+        }
       }
 
       updateData.passwordHash = await bcrypt.hash(newPassword, 10);
@@ -201,12 +311,75 @@ export async function updateProfile(request: FastifyRequest, reply: FastifyReply
         id: true,
         username: true,
         email: true,
+        avatar: true,
+        gender: true,
+        plan: true,
+        aiGenerationsCount: true,
+        aiGenerationsResetAt: true,
         createdAt: true,
       },
     });
 
+    // Dispatch real-time notification
+    createNotification({
+      userId,
+      title: "Profile Updated",
+      message: "Your profile details and avatar were saved successfully.",
+      type: "success",
+      link: "/settings",
+    }).catch(() => {});
+
     return reply.send({
       message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error: any) {
+    request.log.error(error);
+    return reply.status(500).send({
+      error: "Internal Server Error",
+      details: error.message,
+    });
+  }
+}
+
+export async function upgradePlan(request: FastifyRequest, reply: FastifyReply) {
+  const { plan } = request.body as { plan?: string };
+  const userId = (request.user as any).id;
+
+  if (!plan || !["FREE", "PRO_MONTHLY", "PRO_YEARLY"].includes(plan)) {
+    return reply.status(400).send({
+      error: "Bad Request: plan must be 'FREE', 'PRO_MONTHLY', or 'PRO_YEARLY'",
+    });
+  }
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { plan },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        gender: true,
+        plan: true,
+        aiGenerationsCount: true,
+        aiGenerationsResetAt: true,
+        createdAt: true,
+      },
+    });
+
+    // Dispatch real-time notification
+    createNotification({
+      userId,
+      title: "Plan Upgraded",
+      message: `Successfully upgraded to ${plan.replace("_", " ")}. Your enhanced limits are active!`,
+      type: "success",
+      link: "/settings?tab=plan",
+    }).catch(() => {});
+
+    return reply.send({
+      message: `Plan updated to ${plan} successfully`,
       user: updatedUser,
     });
   } catch (error: any) {

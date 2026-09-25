@@ -104,7 +104,7 @@ export default function GatewayPage() {
             onChange={(val) => setSelectedWfId(val)}
             options={workflows.map(wf => ({
               value: wf.id,
-              label: `${wf.method} ${wf.path} — ${wf.name}`,
+              label: `${wf.method} ${wf.path} - ${wf.name}`,
               method: wf.method,
               badge: wf.isPublished ? 'LIVE' : undefined,
               badgeColor: '#10b981'

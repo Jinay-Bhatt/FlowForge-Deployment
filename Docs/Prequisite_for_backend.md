@@ -1,6 +1,6 @@
 # Prerequisite Backend Guide: Understanding the System
 
-This guide outlines the core concepts of backend development, web architecture, and directory patterns. It is designed to prepare you for building, reviewing, and understanding the **FlowForge** platform code.
+This guide outlines the core concepts of backend development, web architecture, and directory patterns. It is designed to prepare you for building, reviewing, and understanding the **JBSnap** platform code.
 
 ---
 
@@ -37,7 +37,7 @@ Web applications run on a **Request-Response cycle**:
 
 ## 2. HTTP and REST API Basics
 
-An API (Application Programming Interface) is a set of rules that allows software systems to talk to each other. FlowForge compiles visually designed workflows into standard **REST (Representational State Transfer) APIs**.
+An API (Application Programming Interface) is a set of rules that allows software systems to talk to each other. JBSnap compiles visually designed workflows into standard **REST (Representational State Transfer) APIs**.
 
 ### 2.1 HTTP Methods (Verbs)
 HTTP requests use specific verbs to state their intent:
@@ -62,7 +62,7 @@ The server uses 3-digit status codes to inform the client of the outcome:
 ```http
 -- REQUEST --
 POST /api/products HTTP/1.1
-Host: api.flowforge.com
+Host: api.jbsnap.com
 Content-Type: application/json
 Authorization: Bearer <jwt-token>
 
@@ -131,7 +131,7 @@ As your application grows, your database structure changes (e.g., adding a `requ
 
 ## 5. Standard Backend Repository Architecture
 
-To keep backends clean, reusable, and easy to maintain, we divide the codebase into folders with single responsibilities. Here is a breakdown of the standard structure that FlowForge builds and exports:
+To keep backends clean, reusable, and easy to maintain, we divide the codebase into folders with single responsibilities. Here is a breakdown of the standard structure that JBSnap builds and exports:
 
 ```
 src/
@@ -203,10 +203,10 @@ Let's look at the lifecycle of a request (`GET /api/project1/products`) as it tr
 
 ---
 
-## 7. Custom Platform Prerequisites (FlowForge Specific)
+## 7. Custom Platform Prerequisites (JBSnap Specific)
 
 ### 7.1 Visual JSON Graphs to Code Compiler
-In FlowForge, users do not write code directly; they connect visual block nodes. The frontend translates these boxes into JSON:
+In JBSnap, users do not write code directly; they connect visual block nodes. The frontend translates these boxes into JSON:
 ```json
 {
   "id": "node-db",
@@ -217,4 +217,4 @@ In FlowForge, users do not write code directly; they connect visual block nodes.
 The **Compiler Engine** acts as a translator. It takes this visual JSON data structure, determines the execution order, and generates actual TypeScript text containing loops, database client calls, and routes.
 
 ### 7.2 Sandboxing
-A **Sandbox** is an isolated runtime box. FlowForge uses sandboxing to execute user-written JavaScript inside dynamic workflows without risking server compromise, credential leaking, or infinite CPU-locking loops.
+A **Sandbox** is an isolated runtime box. JBSnap uses sandboxing to execute user-written JavaScript inside dynamic workflows without risking server compromise, credential leaking, or infinite CPU-locking loops.

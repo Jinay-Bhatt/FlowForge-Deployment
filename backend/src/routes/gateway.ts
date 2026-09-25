@@ -486,6 +486,229 @@ export async function gatewayRoutes(fastify: FastifyInstance) {
             continue;
           }
 
+          // G.1 Gmail Node Execution
+          if (node.type === "gmailNode" || node.type === "gmail") {
+            const toTemplate = node.data?.to || "";
+            const subjectTemplate = node.data?.subject || "Notification";
+            const bodyTemplate = node.data?.body || "";
+            const token = node.data?.accessToken;
+
+            const interpolatedTo = toTemplate.replace(/\$([a-zA-Z0-9_\.]+)/g, (match: string, path: string) => {
+              const val = resolveVariable(path, executionContext);
+              return val !== undefined ? String(val) : "";
+            });
+            const interpolatedSubject = subjectTemplate.replace(/\$([a-zA-Z0-9_\.]+)/g, (match: string, path: string) => {
+              const val = resolveVariable(path, executionContext);
+              return val !== undefined ? String(val) : "";
+            });
+            const interpolatedBody = bodyTemplate.replace(/\$([a-zA-Z0-9_\.]+)/g, (match: string, path: string) => {
+              const val = resolveVariable(path, executionContext);
+              return val !== undefined ? String(val) : "";
+            });
+
+            if (token) {
+              const rawMessage = `To: ${interpolatedTo}\r\nSubject: ${interpolatedSubject}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n${interpolatedBody}`;
+              const encodedMessage = Buffer.from(rawMessage).toString("base64url");
+              try {
+                const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+                  method: "POST",
+                  headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ raw: encodedMessage }),
+                });
+                const resData = await res.json();
+                executionContext.steps[node.id] = { status: res.status, sent: res.ok, data: resData };
+              } catch (err: any) {
+                throw new Error(`Gmail API call failed in node '${node.id}': ${err.message}`);
+              }
+            } else {
+              // Simulated delivery log if no token supplied
+              executionContext.steps[node.id] = {
+                status: 200,
+                sent: true,
+                simulated: true,
+                to: interpolatedTo,
+                subject: interpolatedSubject,
+                body: interpolatedBody,
+              };
+            }
+            continue;
+          }
+
+          // G.2 Google Sheets Node Execution
+          if (node.type === "googleSheetsNode" || node.type === "googleSheets") {
+            const action = node.data?.action || "APPEND_ROW";
+            const spreadsheetId = node.data?.spreadsheetId || "";
+            const range = node.data?.range || "Sheet1!A1";
+            const rowDataTemplate = node.data?.rowData || "[]";
+            const apiKey = node.data?.apiKey || "";
+
+            let rowValues: any[] = [];
+            try {
+              const interpolatedRowData = rowDataTemplate.replace(/\$([a-zA-Z0-9_\.]+)/g, (match: string, path: string) => {
+                const val = resolveVariable(path, executionContext);
+                return val !== undefined ? JSON.stringify(val) : "";
+              });
+              rowValues = JSON.parse(interpolatedRowData);
+            } catch {
+              rowValues = [rowDataTemplate];
+            }
+
+            if (spreadsheetId && apiKey) {
+              try {
+                let url = "";
+                let method = "GET";
+                let body: any = undefined;
+
+                if (action === "APPEND_ROW") {
+                  url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&key=${apiKey}`;
+                  method = "POST";
+                  body = JSON.stringify({ values: [rowValues] });
+                } else {
+                  url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`;
+                  method = "GET";
+                }
+
+                const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body });
+                const resData = await res.json();
+                executionContext.steps[node.id] = { status: res.status, data: resData };
+              } catch (err: any) {
+                throw new Error(`Google Sheets API call failed in node '${node.id}': ${err.message}`);
+              }
+            } else {
+              executionContext.steps[node.id] = {
+                status: 200,
+                simulated: true,
+                action,
+                spreadsheetId,
+                range,
+                values: rowValues,
+              };
+            }
+            continue;
+          }
+
+          // G.3 TXT File Node Execution
+          if (node.type === "txtFileNode" || node.type === "txtFile") {
+            const action = node.data?.action || "WRITE_FILE";
+            const rawPath = node.data?.filePath || "output.txt";
+            const contentTemplate = node.data?.content || "";
+
+            const interpolatedContent = typeof contentTemplate === "string"
+              ? contentTemplate.replace(/\$([a-zA-Z0-9_\.]+)/g, (match: string, pathStr: string) => {
+                  const val = resolveVariable(pathStr, executionContext);
+                  return val !== undefined ? (typeof val === "object" ? JSON.stringify(val) : String(val)) : "";
+                })
+              : JSON.stringify(contentTemplate);
+
+            try {
+              const fs = await import("node:fs/promises");
+              const path = await import("node:path");
+
+              const dataRootDir = path.resolve("data");
+              const resolvedPath = path.resolve(dataRootDir, rawPath);
+
+              // Path Traversal Security Shield
+              if (!resolvedPath.startsWith(dataRootDir)) {
+                throw new Error("Security Violation: Path traversal attack blocked. File operations are strictly restricted to the data directory.");
+              }
+
+              const dir = path.dirname(resolvedPath);
+              await fs.mkdir(dir, { recursive: true });
+
+              if (action === "READ_FILE") {
+                const text = await fs.readFile(resolvedPath, "utf-8");
+                executionContext.steps[node.id] = { success: true, action: "READ_FILE", content: text };
+              } else if (action === "APPEND_FILE") {
+                await fs.appendFile(resolvedPath, interpolatedContent + "\n", "utf-8");
+                executionContext.steps[node.id] = { success: true, action: "APPEND_FILE", filePath: resolvedPath };
+              } else {
+                await fs.writeFile(resolvedPath, interpolatedContent, "utf-8");
+                executionContext.steps[node.id] = { success: true, action: "WRITE_FILE", filePath: resolvedPath };
+              }
+            } catch (err: any) {
+              throw new Error(`TXT File operation failed in node '${node.id}': ${err.message}`);
+            }
+            continue;
+          }
+
+          // G.4 AI Integration Node Execution
+          if (node.type === "aiNode" || node.type === "ai") {
+            const provider = (node.data?.provider || "groq").toLowerCase();
+            const model = node.data?.model || (provider === "gemini" ? "gemini-1.5-flash" : provider === "claude" ? "claude-3-5-sonnet" : provider === "openai" ? "gpt-4o-mini" : "llama-3.3-70b-versatile");
+            const apiKey = node.data?.apiKey || (provider === "groq" ? process.env.GROQ_API_KEY : process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY || "");
+            const systemPrompt = node.data?.systemPrompt || "You are a helpful AI assistant.";
+            const userPromptTemplate = node.data?.prompt || "$request.body.prompt";
+
+            const interpolatedPrompt = userPromptTemplate.replace(/\$([a-zA-Z0-9_\.]+)/g, (match: string, pathStr: string) => {
+              const val = resolveVariable(pathStr, executionContext);
+              return val !== undefined ? (typeof val === "object" ? JSON.stringify(val) : String(val)) : "";
+            });
+
+            try {
+              let aiResponseText = "";
+              if (provider === "groq" || provider === "openai") {
+                const endpoint = provider === "groq" ? "https://api.groq.com/openai/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
+                const res = await fetch(endpoint, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKey}`,
+                  },
+                  body: JSON.stringify({
+                    model,
+                    messages: [
+                      { role: "system", content: systemPrompt },
+                      { role: "user", content: interpolatedPrompt },
+                    ],
+                  }),
+                });
+                const resData = await res.json();
+                aiResponseText = resData.choices?.[0]?.message?.content || JSON.stringify(resData);
+              } else if (provider === "gemini") {
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                const res = await fetch(endpoint, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    contents: [{ parts: [{ text: `${systemPrompt}\n\n${interpolatedPrompt}` }] }],
+                  }),
+                });
+                const resData = await res.json();
+                aiResponseText = resData.candidates?.[0]?.content?.parts?.[0]?.text || JSON.stringify(resData);
+              } else if (provider === "claude") {
+                const endpoint = "https://api.anthropic.com/v1/messages";
+                const res = await fetch(endpoint, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "x-api-key": apiKey,
+                    "anthropic-version": "2023-06-01",
+                  },
+                  body: JSON.stringify({
+                    model,
+                    system: systemPrompt,
+                    messages: [{ role: "user", content: interpolatedPrompt }],
+                    max_tokens: 1024,
+                  }),
+                });
+                const resData = await res.json();
+                aiResponseText = resData.content?.[0]?.text || JSON.stringify(resData);
+              }
+
+              executionContext.steps[node.id] = {
+                provider,
+                model,
+                response: aiResponseText,
+              };
+            } catch (err: any) {
+              throw new Error(`AI Integration node '${node.id}' failed: ${err.message}`);
+            }
+            continue;
+          }
+
           // H. Response Node (Stops execution loop and replies)
           if (node.type === "responseNode" || node.type === "response") {
             const status = node.data?.statusCode || 200;

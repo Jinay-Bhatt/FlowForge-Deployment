@@ -1,4 +1,4 @@
-FlowForge - Complete User Workflows
+JBSnap - Complete User Workflows
 Workflow 1 - User Registration
 User visits platform ↓ Creates account ↓ Verifies email ↓ Logs in ↓ Accesses dashboard
 ________________________________________
@@ -13,7 +13,7 @@ ________________________________________
 Workflow 4 - Publish API
 Workflow Saved ↓ Click Publish ↓ Generate Endpoint ↓ Register Route ↓ Deploy
 Output:
-https://api.flowforge.com/project/products
+https://api.jbsnap.com/project/products
 ________________________________________
 Workflow 5 - Execute API
 Client Request ↓ API Gateway ↓ Authentication Check ↓ Rate Limiter ↓ Workflow Engine ↓ Database ↓ Response

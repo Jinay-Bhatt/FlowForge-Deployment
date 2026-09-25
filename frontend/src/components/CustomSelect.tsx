@@ -154,8 +154,8 @@ export default function CustomSelect({ value, onChange, options, style, classNam
         onClick={() => setIsOpen(!isOpen)}
         style={{
           width: '100%',
-          background: 'rgba(10, 10, 10, 0.6)',
-          border: '1px solid var(--border)',
+          background: isOpen ? 'var(--neu-sunken)' : 'var(--neu-surface)',
+          border: '1px solid var(--neu-border)',
           padding: '10px 14px',
           color: '#f1f5f9',
           fontSize: 13,
@@ -166,10 +166,10 @@ export default function CustomSelect({ value, onChange, options, style, classNam
           alignItems: 'center',
           gap: 10,
           textAlign: 'left',
-          borderRadius: 8,
-          transition: 'border-color 0.2s, box-shadow 0.2s',
-          boxShadow: isOpen ? '0 0 0 3px rgba(99,102,241,0.1)' : 'none',
-          borderColor: isOpen ? 'var(--accent)' : 'var(--border)',
+          borderRadius: 10,
+          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          boxShadow: isOpen ? 'var(--neu-pressed-sm)' : 'var(--neu-flat-xs)',
+          borderColor: isOpen ? 'rgba(99,102,241,0.4)' : 'var(--neu-border)',
         }}
       >
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
@@ -189,22 +189,21 @@ export default function CustomSelect({ value, onChange, options, style, classNam
       {/* Options Dropdown Menu */}
       {isOpen && (
         <div
-          className="glass scroll-area"
+          className="scroll-area"
           style={{
             position: 'absolute',
             zIndex: 9999,
             top: '100%',
             left: 0,
             right: 0,
-            marginTop: 6,
-            background: 'rgba(10, 10, 10, 0.95)',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: 8,
-            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(99, 102, 241, 0.03)',
+            marginTop: 8,
+            background: 'var(--neu-surface)',
+            border: '1px solid var(--neu-border-bevel)',
+            borderRadius: 12,
+            boxShadow: 'var(--neu-flat-lg)',
             maxHeight: 220,
             overflowY: 'auto',
-            padding: 4,
+            padding: 6,
             animation: 'scaleIn 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both',
           }}
         >
@@ -218,17 +217,18 @@ export default function CustomSelect({ value, onChange, options, style, classNam
                 style={{
                   width: '100%',
                   textAlign: 'left',
-                  background: isSelected ? 'rgba(99, 102, 241, 0.12)' : 'transparent',
-                  border: 'none',
-                  borderRadius: 6,
+                  background: isSelected ? 'var(--neu-sunken)' : 'transparent',
+                  border: isSelected ? '1px solid rgba(255, 255, 255, 0.18)' : '1px solid transparent',
+                  boxShadow: isSelected ? 'var(--neu-pressed-sm)' : 'none',
+                  borderRadius: 8,
                   padding: '9px 12px',
                   color: isSelected ? '#fff' : '#94a3b8',
                   fontSize: 12,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  transition: 'background 0.15s, color 0.15s',
-                  marginBottom: 2,
+                  transition: 'all 0.15s ease',
+                  marginBottom: 3,
                   outline: 'none',
                 }}
                 onMouseEnter={(e) => {
